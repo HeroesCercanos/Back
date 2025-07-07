@@ -8,12 +8,12 @@ export class SeedDefaultQuarter1710008400000 implements MigrationInterface {
       VALUES
         (
           1,
-          'Cuartel Central',
-          'Av. Siempre Viva 742, Ciudad Ejemplo',
-          POINT(-34.6037, -58.3816),
-          '+54 11 1234-5678',
-          'cuartel.central@heroescercanos.org',
-          'Cuartel principal del municipio más vulnerable'
+          'Cuartel Monte Caseros',
+          'Colón N° 643',
+          POINT(-30.249865048616716, -57.63056297116415),
+          '+543775422207',
+          'bomberosvoluntarioamontecaseros@hotmail.com.ar',
+          'Bomberos Voluntarios de Monte Caseros'
         )
       ON CONFLICT (id) DO NOTHING;
     `);
