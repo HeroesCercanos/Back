@@ -1,15 +1,16 @@
-import { Controller, Get } from '@nestjs/common';
-import { QuarterService } from './quarter.service';
+import { Controller, Get } from "@nestjs/common";
+import { QuarterService } from "./quarter.service";
+import { Quarter } from "./entities/quarter.entity";
 
-@Controller('quarter')
+@Controller("quarter")
 export class QuarterController {
-constructor(private readonly quarterService: QuarterService) {}
+    constructor(private readonly quarterService: QuarterService) {}
     @Get()
-    findAll(){
-        return this.quarterService.findAll(); ;
+    async findOne(id): Promise<Quarter> {
+        return this.quarterService.findOne(id);
     }
 
-
-
-
+    async findAll(): Promise<Quarter[]> {
+        return this.quarterService.findAll();
+    }
 }
