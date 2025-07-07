@@ -1,0 +1,8 @@
+[
+  {
+    "id": 1,
+    "name": "Cuartel de Bomberos Monte Caseros",
+    "location": { "lat": -34.6, "lng": -58.4 },
+    "description": "El único cuartel del proyecto"
+  }
+]

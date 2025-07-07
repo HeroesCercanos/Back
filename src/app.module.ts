@@ -4,7 +4,7 @@ import { AppService } from "./app.service";
 import { ConfigModule, ConfigService } from "@nestjs/config";
 import typeOrmConfig from "./config/typeorm";
 import { TypeOrmModule } from "@nestjs/typeorm";
-import { QuartersModule } from './quarters/quarters.module';
+import { QuarterModule } from './quarter/quarter.module';
 
 @Module({
     imports: [
@@ -27,8 +27,8 @@ import { QuartersModule } from './quarters/quarters.module';
                 return dbConfig;
             },
         }),
-        
-        QuartersModule,
+
+        QuarterModule,
     ],
     controllers: [AppController],
     providers: [AppService],
