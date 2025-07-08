@@ -1,8 +1,11 @@
 [
-  {
-    "id": 1,
-    "name": "Cuartel de Bomberos Monte Caseros",
-    "location": { "lat": -34.6, "lng": -58.4 },
-    "description": "El único cuartel del proyecto"
-  }
+ {
+  "id": 1,
+  "name": "Cuartel Monte Caseros",
+  "address": "Colón N° 643",
+  "location": "(-30.249865048616716, -57.63056297116415)",
+  "phone": "+543775422207",
+  "email": "bomberosvoluntarioamontecaseros@hotmail.com.ar",
+  "description": "Bomberos Voluntarios de Monte Caseros"
+}
 ]
