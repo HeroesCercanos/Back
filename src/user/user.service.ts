@@ -1,18 +1,25 @@
-import { Injectable } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { User } from './entity/user.entity'; // ajustá ruta si necesario
+import { Injectable } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import { User } from "./entity/user.entity"; // ajustá ruta si necesario
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
-    ) { }
-
+    ) {}
+    // Devuelve todos los usuarios
+    async findAll(): Promise<User[]> {
+        return this.userRepository.find();
+    }
     // Devuelve User | undefined en lugar de lanzar excepción
     async findByEmail(email: string): Promise<User | null> {
         return this.userRepository.findOne({ where: { email } });
+    }
+
+    async findByGoogleId(googleId: string): Promise<User | null> {
+        return this.userRepository.findOne({ where: { googleId } });
     }
 
     async create(data: Partial<User>): Promise<User> {
@@ -20,4 +27,3 @@ export class UserService {
         return this.userRepository.save(user);
     }
 }
-
