@@ -16,4 +16,3 @@ export class Quarter {
 
     @Column({ nullable: true }) description: string;
 }
- 

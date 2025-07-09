@@ -2,7 +2,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Quarter } from '../quarter/entities/quarter.entity';
+import { Quarter } from './entity/quarter.entity';
 
 @Injectable()
 export class QuarterRepository {
