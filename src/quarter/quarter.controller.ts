@@ -1,6 +1,6 @@
 import { Controller, Get } from "@nestjs/common";
 import { QuarterService } from "./quarter.service";
-import { Quarter } from "./entities/quarter.entity";
+import { Quarter } from "./entity/quarter.entity";
 
 @Controller("quarter")
 export class QuarterController {

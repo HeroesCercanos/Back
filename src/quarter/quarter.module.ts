@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { QuarterController} from './quarter.controller';
 import { QuarterService } from './quarter.service';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Quarter } from './entities/quarter.entity';
+import { Quarter } from './entity/quarter.entity';
 import { QuarterRepository } from './quarter.repository';
 
 @Module({
