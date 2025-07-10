@@ -7,6 +7,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { QuarterModule } from './quarter/quarter.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { MatchConstraint } from "./common/match.decorator";
 
 
 @Module({
@@ -38,7 +39,7 @@ import { AuthModule } from './auth/auth.module';
         AuthModule,
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [AppService, MatchConstraint],
 })
 export class AppModule {}
 

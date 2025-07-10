@@ -48,13 +48,17 @@ export class AuthService {
         }
 
         // 2) Hasheo la contraseña
-        const hashedPassword = await bcrypt.hash(dto.password, 10);
+        const { password, confirmPassword, ...rest } = dto;
+        // (Opcional) por seguridad, doble chequeo
+        if (password !== confirmPassword) {
+            throw new BadRequestException("Las contraseñas no coinciden");
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
 
         // 3) Creo el usuario en la BD (role por defecto USER)
         const user = await this.usersService.create({
-            email: dto.email,
+            ...rest, // email, name, etc.
             password: hashedPassword,
-            name: dto.name,
         });
 
         // 4) Firmo y devuelvo el JWT
