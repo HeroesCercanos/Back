@@ -1,4 +1,6 @@
+
 import { Entity, PrimaryGeneratedColumn, Column, Point } from "typeorm";
+
 
 @Entity("quarter")
 export class Quarter {
@@ -7,6 +9,7 @@ export class Quarter {
     @Column() name: string;
 
     @Column() address: string;
+
 
     @Column("point") location: Point;
 
