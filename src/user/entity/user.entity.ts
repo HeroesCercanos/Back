@@ -9,8 +9,8 @@ import { Role } from "../role.enum";
 
 @Entity()
 export class User {
-    @PrimaryGeneratedColumn()
-    id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string;
 
     @Column({ unique: true })
     email: string;
@@ -47,7 +47,5 @@ export class User {
     longitude?: number;
 
     
-    @Column ()
-    googleId?: string;
-
+ 
 }

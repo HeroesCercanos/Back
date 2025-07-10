@@ -1,4 +1,3 @@
-
 import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { User } from "./entity/user.entity";
@@ -21,6 +20,4 @@ export class UserController {
     ) {
         return this.userService.update(req.user.sub, dto);
     }
-
-    
-
+}

@@ -17,6 +17,7 @@ import { Request, Response } from "express";
 
 @Controller('auth')
 export class AuthController {
+    constructor(private authService: AuthService) { }
     @Get('google')
     @UseGuards(AuthGuard('google'))
     async googleAuth() {
