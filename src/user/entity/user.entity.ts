@@ -9,7 +9,7 @@ import { Role } from "../role.enum";
 @Entity()
 export class User {
     @PrimaryGeneratedColumn("uuid")
-    id: number;
+    id: string;
 
     @Column({ unique: true })
     email: string;
@@ -26,7 +26,7 @@ export class User {
     @CreateDateColumn()
     createdAt: Date;
 
-     @Column({ type: 'varchar', nullable: true, default: null })
+    @Column({ type: "varchar", nullable: true, default: null })
     googleId?: string;
 
     @Column({
@@ -35,4 +35,10 @@ export class User {
         default: Role.USER,
     })
     role: Role;
+
+    @Column("decimal", { precision: 9, scale: 6, nullable: true })
+    latitude?: number;
+
+    @Column("decimal", { precision: 9, scale: 6, nullable: true })
+    longitude?: number;
 }

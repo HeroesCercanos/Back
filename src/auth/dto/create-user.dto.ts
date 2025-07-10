@@ -19,6 +19,6 @@ export class CreateUserDto {
   @IsNotEmpty()
   name: string;
 
-  @IsEnum(Role, { message: 'Role inválido' })
-  role: Role;
+  /* @IsEnum(Role, { message: 'Role inválido' })
+  role: Role; */
 }

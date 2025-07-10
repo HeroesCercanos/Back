@@ -26,4 +26,20 @@ export class UserService {
         const user = this.userRepository.create(data);
         return this.userRepository.save(user);
     }
+
+    async update(id: string, attrs: Partial<User>): Promise<User> {
+        await this.userRepository.update(id, attrs);
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new Error(`User with id ${id} not found`);
+        }
+        return user;
+    }
+    async updateLocation(
+        id: string,
+        latitude: number,
+        longitude: number,
+    ): Promise<User> {
+        return this.update(id, { latitude, longitude });
+    }
 }
