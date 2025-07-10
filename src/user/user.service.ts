@@ -28,7 +28,7 @@ export class UserService {
 
 
     async findByGoogleId(googleId: string): Promise<User | null> {
-        return this.userRepository.findOne({ where: { googleId } });
+        return this.userRepository.findOne({ where: { googleId} });
     }
 
 
