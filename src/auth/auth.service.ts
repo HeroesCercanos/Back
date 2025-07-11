@@ -113,7 +113,7 @@ export class AuthService {
      * Helper: genera y firma el JWT
      */
     private generateToken(user: User) {
-        const payload = { sub: user.id, email: user.email, role: user.role };
+        const payload = { sub: user.id, email: user.email, name: user.name, role: user.role };
         const access_token = this.jwtService.sign(payload);
         return { access_token, user: payload };
     }

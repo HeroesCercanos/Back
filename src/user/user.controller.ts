@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
 import { UserService } from "./user.service";
 import { User } from "./entity/user.entity";
 import { AuthGuard } from "@nestjs/passport";
@@ -10,6 +10,16 @@ export class UserController {
     @Get()
     async getAll(): Promise<User[]> {
         return this.userService.findAll();
+    }
+
+    /**
+     * Crea un nuevo usuario.
+     * Endpoint: POST /users
+     */
+    @Post()
+    @HttpCode(HttpStatus.CREATED)
+    async create(@Body() data: Partial<User>): Promise<User> {
+        return this.userService.create(data);
     }
 
     @Post("me/location")
