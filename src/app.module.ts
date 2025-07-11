@@ -9,6 +9,9 @@ import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
 
 import { MatchConstraint } from "./common/match.decorator";
+import { IncidentController } from './incidents/incidents.controller';
+import { IncidentService } from './incidents/incidents.service';
+import { IncidentModule } from './incidents/incidents.module';
 
 
 
@@ -37,8 +40,10 @@ import { MatchConstraint } from "./common/match.decorator";
         QuarterModule,
 
         UserModule,
-
+        
         AuthModule,
+
+        IncidentModule,
     ],
     controllers: [AppController],
     providers: [AppService, MatchConstraint],

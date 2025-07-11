@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "./entity/user.entity"; // ajustá ruta si necesario
@@ -19,7 +19,7 @@ export class UserService {
     }
 
     async findByGoogleId(googleId: string): Promise<User | null> {
-        return this.userRepository.findOne({ where: { googleId} });
+        return this.userRepository.findOne({ where: { googleId } });
     }
 
     async create(data: Partial<User>): Promise<User> {
@@ -28,18 +28,26 @@ export class UserService {
     }
 
     async update(id: string, attrs: Partial<User>): Promise<User> {
-    await this.userRepository.update(id, attrs);
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-        throw new Error(`User with id ${id} not found`);
+        await this.userRepository.update(id, attrs);
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new Error(`User with id ${id} not found`);
+        }
+        return user;
     }
-    return user;
-}
     async updateLocation(
         id: string,
         latitude: number,
         longitude: number,
     ): Promise<User> {
         return this.update(id, { latitude, longitude });
+    }
+
+    async remove(id: string): Promise<void> {
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new NotFoundException(`User with id ${id} not found`);
+        }
+        await this.userRepository.remove(user);
     }
 }
