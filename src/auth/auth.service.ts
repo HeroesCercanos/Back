@@ -10,6 +10,7 @@ import { UserService } from "src/user/user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { User } from "src/user/entity/user.entity";
 import { Role } from "src/user/role.enum";
+import axios from "axios";
 
 @Injectable()
 export class AuthService {
@@ -113,6 +114,20 @@ export class AuthService {
             // handle the case where user is null
             throw new Error("User not found");
         }
+    }
+
+    async revokeGoogleToken(token: string): Promise<{ revoked: boolean }> {
+        // revoca el token en Google
+        await axios.post(
+            "https://oauth2.googleapis.com/revoke",
+            new URLSearchParams({ token }),
+            {
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded",
+                },
+            },
+        );
+        return { revoked: true };
     }
 
     private generateToken(user: User) {

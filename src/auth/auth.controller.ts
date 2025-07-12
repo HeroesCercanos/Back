@@ -1,4 +1,3 @@
-
 import {
     Body,
     Controller,
@@ -14,16 +13,14 @@ import { LoginUserDto } from "./dto/login-user.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { Request, Response } from "express";
 
-
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
-    constructor(private authService: AuthService) { }
-    @Get('google')
-    @UseGuards(AuthGuard('google'))
+    constructor(private authService: AuthService) {}
+    @Get("google")
+    @UseGuards(AuthGuard("google"))
     async googleAuth() {
         // Redirige a Google
     }
-
 
     @Get("google/callback")
     @UseGuards(AuthGuard("google"))
@@ -51,5 +48,10 @@ export class AuthController {
     @Post("signup")
     async signUp(@Body() dto: CreateUserDto) {
         return this.authService.signUp(dto);
+    }
+
+    @Post("google/revoke")
+    async revokeGoogle(@Body("token") token: string) {
+        return this.authService.revokeGoogleToken(token);
     }
 }
