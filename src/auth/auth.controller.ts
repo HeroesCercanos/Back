@@ -12,6 +12,7 @@ import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { Request, Response } from "express";
+import axios from "axios";
 
 @Controller("auth")
 export class AuthController {
@@ -50,8 +51,5 @@ export class AuthController {
         return this.authService.signUp(dto);
     }
 
-    @Post("google/revoke")
-    async revokeGoogle(@Body("token") token: string) {
-        return this.authService.revokeGoogleToken(token);
-    }
+    
 }

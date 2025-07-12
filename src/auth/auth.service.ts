@@ -116,19 +116,7 @@ export class AuthService {
         }
     }
 
-    async revokeGoogleToken(token: string): Promise<{ revoked: boolean }> {
-        // revoca el token en Google
-        await axios.post(
-            "https://oauth2.googleapis.com/revoke",
-            new URLSearchParams({ token }),
-            {
-                headers: {
-                    "Content-Type": "application/x-www-form-urlencoded",
-                },
-            },
-        );
-        return { revoked: true };
-    }
+
 
     private generateToken(user: User) {
         const payload = {
