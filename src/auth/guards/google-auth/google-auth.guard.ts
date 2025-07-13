@@ -1,8 +1,14 @@
-import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
+import { Injectable, ExecutionContext } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { Observable } from 'rxjs';
 
 @Injectable()
-export class GoogleAuthGuard extends AuthGuard('google'){
-  
+export class GoogleAuthGuard extends AuthGuard('google') {
+  // Cambiamos de 'protected' a 'public' (o 'public override' si tu TS lo permite)
+  public getAuthenticateOptions(context: ExecutionContext) {
+    return {
+      scope:      ['openid', 'email', 'profile'],
+      prompt:     'select_account',
+      accessType: 'offline',
+    };
+  }
 }

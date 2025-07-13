@@ -12,19 +12,19 @@ import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { Request, Response } from "express";
-import axios from "axios";
+import { GoogleAuthGuard } from "./guards/google-auth/google-auth.guard";
 
 @Controller("auth")
 export class AuthController {
     constructor(private authService: AuthService) {}
     @Get("google")
-    @UseGuards(AuthGuard("google"))
+    @UseGuards(GoogleAuthGuard)
     async googleAuth() {
         // Redirige a Google
     }
 
     @Get("google/callback")
-    @UseGuards(AuthGuard("google"))
+    @UseGuards(GoogleAuthGuard)
     async googleCallback(
         @Req() req: Request & { user: any },
         @Res() res: Response,
