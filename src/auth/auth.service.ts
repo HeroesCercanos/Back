@@ -10,7 +10,6 @@ import { UserService } from "src/user/user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { User } from "src/user/entity/user.entity";
 import { Role } from "src/user/role.enum";
-import axios from "axios";
 
 @Injectable()
 export class AuthService {
@@ -116,8 +115,6 @@ export class AuthService {
         }
     }
 
-
-
     private generateToken(user: User) {
         const payload = {
             sub: user.id,
@@ -133,4 +130,6 @@ export class AuthService {
             user: { id: sub, ...rest },
         };
     }
+
+    
 }
