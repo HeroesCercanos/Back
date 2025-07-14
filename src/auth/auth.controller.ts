@@ -50,6 +50,4 @@ export class AuthController {
     async signUp(@Body() dto: CreateUserDto) {
         return this.authService.signUp(dto);
     }
-
-    
 }
