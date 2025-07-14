@@ -12,6 +12,9 @@ import { MatchConstraint } from "./common/match.decorator";
 import { IncidentController } from './incidents/incidents.controller';
 import { IncidentService } from './incidents/incidents.service';
 import { IncidentModule } from './incidents/incidents.module';
+import { CloudinaryController } from './cloudinary/cloudinary.controller';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { CloudinaryService } from "./cloudinary/cloudinary.service";
 
 
 
@@ -44,9 +47,11 @@ import { IncidentModule } from './incidents/incidents.module';
         AuthModule,
 
         IncidentModule,
+
+        CloudinaryModule,
     ],
-    controllers: [AppController],
-    providers: [AppService, MatchConstraint],
+    controllers: [AppController, CloudinaryController],
+    providers: [AppService, MatchConstraint, CloudinaryService],
 })
 export class AppModule {}
 
