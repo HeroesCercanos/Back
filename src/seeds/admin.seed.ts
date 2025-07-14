@@ -8,7 +8,7 @@ export async function seedAdmin() {
     await connectionSource.initialize();
   }
 
-  const passwordHash = bcrypt.hashSync('Henry25b!', 10);
+  const passwordHash = bcrypt.hashSync('Henry25b!!', 10);
 
   // INSERT con ON CONFLICT
   await connectionSource.query(`
