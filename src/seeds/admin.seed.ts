@@ -3,7 +3,7 @@ import 'dotenv/config';
 import { connectionSource } from '../config/typeorm';
 import * as bcrypt          from 'bcrypt';
 
-async function seedAdmin() {
+export async function seedAdmin() {
   if (!connectionSource.isInitialized) {
     await connectionSource.initialize();
   }
@@ -27,7 +27,6 @@ async function seedAdmin() {
   `);
 
   console.log('✅ Seed de admin completado');
-  await connectionSource.destroy();
 }
 
 seedAdmin()
