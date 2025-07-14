@@ -9,7 +9,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
             ignoreExpiration: false,
-            secretOrKey: process.env.JWT_SECRET || "tuSecretoMuySeguro",
+            secretOrKey: process.env.JWT_SECRET 
         });
     }
 
@@ -17,6 +17,7 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         // payload.sub = user.id, payload.role = Role.*
         return {
             userId: payload.sub,
+            name: payload.name,
             email: payload.email,
             role: payload.role,
         };

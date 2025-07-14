@@ -51,4 +51,15 @@ export class AuthController {
         return this.authService.signUp(dto);
     }
 
+    @Get("me")
+    @UseGuards(AuthGuard("jwt")) // o tu guard personalizado
+    getProfile(@Req() req) {
+        return {
+            id: req.user.id,
+            email: req.user.email,
+            name: req.user.name,
+            role: req.user.role
+            // cualquier campo que quieras devolver
+        };
+    }
 }
