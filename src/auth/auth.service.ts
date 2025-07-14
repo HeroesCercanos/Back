@@ -1,4 +1,3 @@
-
 // src/auth/auth.service.ts
 import {
     BadRequestException,
@@ -31,13 +30,25 @@ export class AuthService {
 
         // 3) Construir payload con Role
         const payload = {
-            sub: user.id,
+            name: user.name,
             email: user.email,
             role: user.role,
         };
 
-        // 4) Firmar y devolver
-        return { access_token: this.jwtService.sign(payload) };
+        // 4) Firmo el JWT
+
+        const access_token = this.jwtService.sign(payload);
+
+        return {
+            access_token: this.jwtService.sign(payload),
+            // opcionalmente también devolvemos el user si lo necesitas
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+            },
+        };
     }
 
     /** Registro de usuario + devolución de JWT */
@@ -109,13 +120,24 @@ export class AuthService {
         }
     }
 
-    /**
-     * Helper: genera y firma el JWT
-     */
     private generateToken(user: User) {
-        const payload = { sub: user.id, email: user.email, name: user.name, role: user.role };
+        const payload = {
+            sub: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+        };
         const access_token = this.jwtService.sign(payload);
-        return { access_token, user: payload };
+
+        return {
+            access_token: this.jwtService.sign(payload),
+            // opcionalmente también devolvemos el user si lo necesitas
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+            },
+        };
     }
 }
-

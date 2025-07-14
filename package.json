@@ -23,27 +23,28 @@
         "migration:generate": "npm run typeorm -- -d src/config/typeorm.ts migration:generate",
         "migration:create": "npm run typeorm migration:create",
         "migration:revert": "npm run typeorm -- -d src/config/typeorm.ts migration:revert",
-        "migration:show": "npm run typeorm -- -d src/config/typeorm.ts migration:show"
+        "migration:show": "npm run typeorm -- -d src/config/typeorm.ts migration:show",
+        "seed:admin": "ts-node -r tsconfig-paths/register src/seeds/admin.seed.ts",
+        "seed:quarter": "ts-node -r tsconfig-paths/register src/seeds/quarter.seed.ts"
     },
     "dependencies": {
         "@nestjs/common": "^11.0.1",
         "@nestjs/config": "^4.0.2",
         "@nestjs/core": "^11.0.1",
-
         "@nestjs/jwt": "^11.0.0",
-
         "@nestjs/passport": "^11.0.5",
         "@nestjs/platform-express": "^11.0.1",
         "@nestjs/swagger": "^11.2.0",
         "@nestjs/typeorm": "^11.0.0",
+        "axios": "^1.10.0",
         "bcrypt": "^6.0.0",
+        "class-transformer": "^0.5.1",
         "class-validator": "^0.14.2",
+        "cloudinary": "^2.7.0",
         "dotenv": "^17.0.1",
         "passport": "^0.7.0",
         "passport-google-oauth20": "^2.0.0",
-
         "passport-jwt": "^4.0.1",
-
         "pg": "^8.16.3",
         "reflect-metadata": "^0.2.2",
         "rxjs": "^7.8.1",

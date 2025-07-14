@@ -1,4 +1,16 @@
-import { Body, Controller, Get, HttpCode, HttpStatus, Post, Req, UseGuards } from "@nestjs/common";
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    HttpCode,
+    HttpStatus,
+    Param,
+    Post,
+    Query,
+    Req,
+    UseGuards,
+} from "@nestjs/common";
 import { UserService } from "./user.service";
 import { User } from "./entity/user.entity";
 import { AuthGuard } from "@nestjs/passport";
@@ -12,10 +24,6 @@ export class UserController {
         return this.userService.findAll();
     }
 
-    /**
-     * Crea un nuevo usuario.
-     * Endpoint: POST /users
-     */
     @Post()
     @HttpCode(HttpStatus.CREATED)
     async create(@Body() data: Partial<User>): Promise<User> {
@@ -29,5 +37,15 @@ export class UserController {
         @Body() dto: { latitude: number; longitude: number },
     ) {
         return this.userService.update(req.user.sub, dto);
+    }
+
+    @Get(":id")
+    findOne(@Query("id") id: string): Promise<User> {
+        return this.userService.update(id, {} as Partial<User>);
+    }
+
+    @Delete(":id")
+    remove(@Param("id") id: string): Promise<void> {
+        return this.userService.remove(id);
     }
 }

@@ -1,4 +1,3 @@
-
 import {
     Body,
     Controller,
@@ -13,20 +12,19 @@ import { AuthService } from "./auth.service";
 import { LoginUserDto } from "./dto/login-user.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { Request, Response } from "express";
+import { GoogleAuthGuard } from "./guards/google-auth/google-auth.guard";
 
-
-@Controller('auth')
+@Controller("auth")
 export class AuthController {
-    constructor(private authService: AuthService) { }
-    @Get('google')
-    @UseGuards(AuthGuard('google'))
+    constructor(private authService: AuthService) {}
+    @Get("google")
+    @UseGuards(GoogleAuthGuard)
     async googleAuth() {
         // Redirige a Google
     }
 
-
     @Get("google/callback")
-    @UseGuards(AuthGuard("google"))
+    @UseGuards(GoogleAuthGuard)
     async googleCallback(
         @Req() req: Request & { user: any },
         @Res() res: Response,
