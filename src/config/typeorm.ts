@@ -10,11 +10,11 @@ const config = {
     port: process.env.DB_PORT as unknown as number,
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
-    entities: ["dist/**/*.entity{.js,.ts}"],
+    entities: ['dist/**/*.entity{.ts,.js}'],
     synchronize: false,
     logging: true, //me loguea las querys
     migrationsRun: true,
-    migrations: ["dist/migrations/**/*{.js,.ts}"],
+    migrations: ['dist/migrations/*{.ts,.js}'],
 
 };
 

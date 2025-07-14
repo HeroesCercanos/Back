@@ -124,12 +124,15 @@ export class AuthService {
         };
         const access_token = this.jwtService.sign(payload);
 
-        const { sub, ...rest } = payload;
         return {
-            access_token,
-            user: { id: sub, ...rest },
+            access_token: this.jwtService.sign(payload),
+            // opcionalmente también devolvemos el user si lo necesitas
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+            },
         };
     }
-
-    
 }
