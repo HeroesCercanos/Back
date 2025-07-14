@@ -31,17 +31,22 @@ export class AuthService {
         // 3) Construir payload con Role
         const payload = {
             name: user.name,
+            email: user.email,
+            role: user.role,
         };
 
         // 4) Firmo el JWT
 
-        const token = this.jwtService.sign(payload);
+        const access_token = this.jwtService.sign(payload);
 
-        // 5) Devuelvo token + datos del user
         return {
-            access_token: token,
+            access_token: this.jwtService.sign(payload),
+            // opcionalmente también devolvemos el user si lo necesitas
             user: {
+                id: user.id,
+                email: user.email,
                 name: user.name,
+                role: user.role,
             },
         };
     }
@@ -124,12 +129,15 @@ export class AuthService {
         };
         const access_token = this.jwtService.sign(payload);
 
-        const { sub, ...rest } = payload;
         return {
-            access_token,
-            user: { id: sub, ...rest },
+            access_token: this.jwtService.sign(payload),
+            // opcionalmente también devolvemos el user si lo necesitas
+            user: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                role: user.role,
+            },
         };
     }
-
-    
 }
