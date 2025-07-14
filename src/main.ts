@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { loggerGlobal } from "./middlewares/logger.middleware";
 import { ValidationPipe } from "@nestjs/common";
 import { seedAdmin } from "./seeds/admin.seed";
+import { seedQuarter } from "./seeds/quarter.seed";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -22,6 +23,7 @@ async function bootstrap() {
 
     if (process.env.NODE_ENV !== "production") {
         await seedAdmin(); // inserta el admin si no existe
+        await seedQuarter();
     }
 
     app.enableCors({

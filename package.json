@@ -24,7 +24,8 @@
         "migration:create": "npm run typeorm migration:create",
         "migration:revert": "npm run typeorm -- -d src/config/typeorm.ts migration:revert",
         "migration:show": "npm run typeorm -- -d src/config/typeorm.ts migration:show",
-        "seed:admin": "ts-node -r tsconfig-paths/register src/seeds/admin.seed.ts"
+        "seed:admin": "ts-node -r tsconfig-paths/register src/seeds/admin.seed.ts",
+        "seed:quarter": "ts-node -r tsconfig-paths/register src/seeds/quarter.seed.ts"
     },
     "dependencies": {
         "@nestjs/common": "^11.0.1",
