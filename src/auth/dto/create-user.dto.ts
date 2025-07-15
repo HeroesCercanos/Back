@@ -9,14 +9,19 @@ import {
 } from "class-validator";
 import { Role } from "../../user/role.enum";
 import { Match } from "src/common/match.decorator";
+import { ApiProperty } from "@nestjs/swagger";
 
 export class CreateUserDto {
+    @ApiProperty({ example: "John Doe" })
     @IsNotEmpty()
     name: string;
+
+    @ApiProperty({ example: "user@gmailcom" })
     @IsEmail()
     @IsNotEmpty()
     email: string;
 
+    @ApiProperty({ example: "123456" })
     @IsNotEmpty()
     @Matches(
         /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]{8,15}$/,
@@ -27,6 +32,7 @@ export class CreateUserDto {
     )
     password: string;
 
+    @ApiProperty({ example: "123456" })
     @IsString()
     @MinLength(6)
     @Validate(Match, ["password"], {
