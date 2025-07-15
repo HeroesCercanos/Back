@@ -12,16 +12,20 @@ import {
 import { FileInterceptor } from "@nestjs/platform-express";
 import { Response } from "express";
 import { CloudinaryService } from "./cloudinary.service";
-import { UploadMediaDto } from "./dto/cloudinary.dto"; 
-import { multerConfig } from "./multer.config"; 
-import { diskStorage } from "multer";
+import { UploadMediaDto } from "./dto/cloudinary.dto";
+import { multerConfig } from "./multer.config";
 import { unlink } from "fs/promises";
-
+import { JwtAuthGuard } from "./jwt-auth.guard";
+import { RolesGuard } from "./roles.guard";
+import { Roles } from "./roles.decorator";
+import { UseGuards } from "@nestjs/common";
 @Controller("cloudinary")
 export class CloudinaryController {
     constructor(private readonly cloudinary: CloudinaryService) {}
 
     @Post("upload")
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles("admin")
     @UseInterceptors(FileInterceptor("file", multerConfig))
     async upload(
         @UploadedFile() file: Express.Multer.File,
