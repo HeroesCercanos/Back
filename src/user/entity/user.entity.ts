@@ -25,17 +25,17 @@ export class User {
     @Column({ nullable: true })
     picture: string;
 
-    @Column({ nullable: true })
-    phone: string;
-
-    @Column({ nullable: true })
-    address: string;
-
     @CreateDateColumn()
     createdAt: Date;
 
     @Column({ type: "varchar", nullable: true, default: null })
     googleId?: string;
+
+    @Column({ nullable: true })
+    phone?: string;
+
+    @Column({ nullable: true })
+    address?: string;
 
     @Column({
         type: "enum",
