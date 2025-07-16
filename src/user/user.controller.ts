@@ -6,7 +6,10 @@ import {
     HttpCode,
     HttpStatus,
     Param,
+    ParseIntPipe,
+    Patch,
     Post,
+    Put,
     Query,
     Req,
     UseGuards,
@@ -14,6 +17,7 @@ import {
 import { UserService } from "./user.service";
 import { User } from "./entity/user.entity";
 import { AuthGuard } from "@nestjs/passport";
+import { UpdateUserDto } from "src/auth/dto/update-user.dto";
 
 @Controller("users")
 export class UserController {
@@ -47,5 +51,13 @@ export class UserController {
     @Delete(":id")
     remove(@Param("id") id: string): Promise<void> {
         return this.userService.remove(id);
+    }
+
+    @Patch(":id")
+    updateUser(
+        @Param("id", ParseIntPipe) id: string,
+        @Body() updateUserDto: UpdateUserDto,
+    ): Promise<User> {
+        return this.userService.update(id, updateUserDto);
     }
 }
