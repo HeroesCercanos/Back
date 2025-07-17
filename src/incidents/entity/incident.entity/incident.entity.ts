@@ -1,64 +1,63 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { User } from 'src/user/entity/user.entity';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    CreateDateColumn,
+    ManyToOne,
+} from "typeorm";
+import { User } from "src/user/entity/user.entity";
 
 export enum IncidentType {
-  INCENDIO = 'incendio',
-  ACCIDENTE = 'accidente',
+    ACCIDENTE = "accidente",
+    INCENDIO = "incendio",
 }
 
-export enum IncidentAction {
-  ASISTIDO = 'asistido',
-  ELIMINADO = 'eliminado',
+export enum IncidentStatus {
+    ASISTIDO = "asistido",
+    ELIMINADO = "eliminado",
 }
 
-@Entity('incidents')
+@Entity()
 export class Incident {
-  @PrimaryGeneratedColumn()
-  id: number;
+    @PrimaryGeneratedColumn('uuid')
+    id: string
 
-  @Column({
-    type: 'enum',
-    enum: IncidentType,
-    default: IncidentType.ACCIDENTE,
-  })
-  incidentType: IncidentType;
+    @Column({
+        type: "enum",
+        enum: IncidentType,
+    })
+    type: IncidentType;
 
-  @Column('decimal', { precision: 9, scale: 6 })
-  latitude: number;
+    @Column("decimal", { precision: 10, scale: 6 })
+    latitude: number;
 
-  @Column('decimal', { precision: 9, scale: 6 })
-  longitude: number;
+    @Column("decimal", { precision: 10, scale: 6 })
+    longitude: number;
 
-  @Column({ nullable: true })
-  locationDetail?: string;
+    @Column({ nullable: true })
+    description?: string;
 
-  @Column({ nullable: true })
-  commentaries?: string;
+    @Column({ nullable: true })
+    victimName?: string;
 
-  // Usuario que reporta el incidente
-  @Column()
-  reporterId: number;
+    @Column({ nullable: true })
+    reason?: string;
 
-  @ManyToOne(() => User, user => user.reportedIncidents)
-  @JoinColumn({ name: 'reporterId' })
-  reporter: User;
+    @Column({ nullable: true })
+    adminComment?: string;
 
-  // Relación con el admin que maneja el incidente
-  @Column({ nullable: true })
-  adminId?: number;
+    @Column({
+        type: "enum",
+        enum: IncidentStatus,
+        nullable: true, // ⚠️ Ahora puede ser null al principio
+    })
+    status?: IncidentStatus;
 
-  @ManyToOne(() => User, user => user.handledIncidents)
-  @JoinColumn({ name: 'adminId' })
-  admin?: User;
+    @ManyToOne(() => User, (user) => user.incidents, { eager: true })
+    user: User;
 
-  // Acción tomada por el admin
-  @Column({
-    type: 'enum',
-    enum: IncidentAction,
-    nullable: true,
-  })
-  action?: IncidentAction;
-
-  @Column({ nullable: true })
-  adminCommentary?: string;
+    @CreateDateColumn()
+    createdAt: Date;
 }
+
+export default Incident;
