@@ -1,5 +1,5 @@
 import { IsEnum, IsLatitude, IsLongitude, IsOptional, IsString } from 'class-validator';
-import { IncidentType } from '../entity/incident.entity/incident.entity'; 
+import { IncidentType } from '../entity/incident.entity'; 
 
 export class CreateIncidentDto {
   @IsEnum(IncidentType)

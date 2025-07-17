@@ -1,5 +1,5 @@
 import { IsEnum, IsOptional, IsString } from "class-validator";
-import { IncidentStatus } from "../entity/incident.entity/incident.entity";
+import { IncidentStatus } from "../entity/incident.entity";
 
 export class AdminActionDto {
     @IsOptional()

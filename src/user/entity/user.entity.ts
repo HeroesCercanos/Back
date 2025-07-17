@@ -6,7 +6,7 @@ import {
     OneToMany,
 } from "typeorm";
 import { Role } from "../role.enum";
-import { Incident } from "src/incidents/entity/incident.entity/incident.entity";
+import { Incident } from "src/incidents/entity/incident.entity";
 
 @Entity()
 export class User {
