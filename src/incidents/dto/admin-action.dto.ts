@@ -1,15 +1,21 @@
-import { IsEnum, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
-import { IncidentAction } from "src/incidents/entity/incident.entity/incident.entity";
+import { IsEnum, IsOptional, IsString } from "class-validator";
+import { IncidentStatus } from "../entity/incident.entity/incident.entity";
 
 export class AdminActionDto {
-    @IsEnum(IncidentAction)
-    action: IncidentAction;
-
+    @IsOptional()
     @IsString()
-    @IsNotEmpty()
-    adminCommentary: string;
+    victimName?: string;
 
     @IsOptional()
-    @IsNumber()
-    adminId?: number; // puede omitirse si se obtiene vía auth (chequear bien)
+    @IsString()
+    reason?: string;
+
+    @IsOptional()
+    @IsString()
+    adminComment?: string;
+
+    @IsEnum(IncidentStatus)
+    status: IncidentStatus; // solo "asistido" o "eliminado"
 }
+
+export default AdminActionDto

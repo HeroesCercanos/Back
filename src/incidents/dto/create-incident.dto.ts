@@ -1,10 +1,17 @@
-import { IncidentType } from '../entity/incident.entity/incident.entity';
+import { IsEnum, IsLatitude, IsLongitude, IsOptional, IsString } from 'class-validator';
+import { IncidentType } from '../entity/incident.entity/incident.entity'; 
 
 export class CreateIncidentDto {
-  incidentType: IncidentType;
+  @IsEnum(IncidentType)
+  type: IncidentType;
+
+  @IsLatitude()
   latitude: number;
+
+  @IsLongitude()
   longitude: number;
-  locationDetail?: string;
-  commentaries?: string;
-  reporterId: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
 }
