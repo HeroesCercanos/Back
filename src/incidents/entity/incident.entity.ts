@@ -4,8 +4,10 @@ import {
     Column,
     CreateDateColumn,
     ManyToOne,
+    OneToMany,
 } from "typeorm";
 import { User } from "src/user/entity/user.entity";
+import IncidentHistory from "./incident-history.entity";
 
 export enum IncidentType {
     ACCIDENTE = "accidente",
@@ -58,6 +60,9 @@ export class Incident {
 
     @CreateDateColumn()
     createdAt: Date;
+
+    @OneToMany(() => IncidentHistory, (history) => history.incident)
+    history: IncidentHistory[];
 }
 
 export default Incident;
