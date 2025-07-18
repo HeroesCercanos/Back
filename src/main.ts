@@ -6,7 +6,6 @@ import { loggerGlobal } from "./middlewares/logger.middleware";
 import { ValidationPipe } from "@nestjs/common";
 import { seedAdmin } from "./seeds/admin.seed";
 import { seedQuarter } from "./seeds/quarter.seed";
-import { DataSource } from "typeorm";
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
@@ -21,12 +20,7 @@ async function bootstrap() {
         .build();
     const doc = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("docs", app, doc);
-
-    const dataSource = app.get(DataSource);
-    await dataSource.initialize();
-
-    // Ejecutar migraciones pendientes antes de arrancar el servidor
-    await dataSource.runMigrations();
+    
 
     if (process.env.NODE_ENV !== "production") {
         await seedAdmin(); // inserta el admin si no existe
