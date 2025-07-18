@@ -17,6 +17,9 @@ import { CloudinaryModule } from "./cloudinary/cloudinary.module";
 import { CloudinaryService } from "./cloudinary/cloudinary.service";
 import { MailService } from "./mail/mail.service";
 import { MailModule } from "./mail/mail.module";
+import { DonationService } from "./donations/donations.service";
+import { DonationController } from "./donations/donations.controller";
+import { DonationModule } from "./donations/donations.module";
 
 @Module({
     imports: [
@@ -51,8 +54,16 @@ import { MailModule } from "./mail/mail.module";
         CloudinaryModule,
 
         MailModule,
+
+        DonationModule,
     ],
     controllers: [AppController, CloudinaryController],
-    providers: [AppService, MatchConstraint, CloudinaryService, MailService],
+    providers: [
+        AppService,
+        MatchConstraint,
+        CloudinaryService,
+        MailService,
+        
+    ],
 })
 export class AppModule {}
