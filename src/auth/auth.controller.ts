@@ -37,8 +37,8 @@ export class AuthController {
             picture: user.picture,
         });
 
-        res.redirect(`${process.env.FRONTEND_URL}?token=${access_token}`);
-        return { access_token, user };
+        const frontend = process.env.FRONTEND_URL || "http://localhost:3001";
+        return res.redirect(`${frontend}?token=${access_token}`);
     }
 
     @Post("signin")
@@ -58,7 +58,7 @@ export class AuthController {
             id: req.user.id,
             email: req.user.email,
             name: req.user.name,
-            role: req.user.role
+            role: req.user.role,
             // cualquier campo que quieras devolver
         };
     }
