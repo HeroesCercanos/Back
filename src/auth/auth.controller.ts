@@ -37,7 +37,7 @@ export class AuthController {
             picture: user.picture,
         });
 
-        res.redirect(`http://localhost:3002?token=${access_token}`);
+        res.redirect(`${process.env.FRONTEND_URL}?token=${access_token}`);
         return { access_token, user };
     }
 
