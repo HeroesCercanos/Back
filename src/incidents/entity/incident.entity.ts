@@ -15,14 +15,15 @@ export enum IncidentType {
 }
 
 export enum IncidentStatus {
+    ACTIVO = "activo",
     ASISTIDO = "asistido",
     ELIMINADO = "eliminado",
 }
 
 @Entity()
 export class Incident {
-    @PrimaryGeneratedColumn('uuid')
-    id: string
+    @PrimaryGeneratedColumn("uuid")
+    id: string;
 
     @Column({
         type: "enum",
@@ -51,9 +52,9 @@ export class Incident {
     @Column({
         type: "enum",
         enum: IncidentStatus,
-        nullable: true, // ⚠️ Ahora puede ser null al principio
+        default: IncidentStatus.ACTIVO, // valor por defecto
     })
-    status?: IncidentStatus;
+    status: IncidentStatus;
 
     @ManyToOne(() => User, (user) => user.incidents, { eager: true })
     user: User;
