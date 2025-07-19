@@ -46,7 +46,7 @@ export class AuthController {
         });
 
         return res.redirect(process.env.FRONTEND_URL!);
-    } 
+    }
 
     /* @Get("google/callback")
     @UseGuards(GoogleAuthGuard)
@@ -65,7 +65,7 @@ export class AuthController {
         res.redirect(`${process.env.FRONTEND_URL}?token=${access_token}`);
         return { access_token, user };
     }*/
- 
+
     //cookies
     @Post("signin")
     @HttpCode(200)
@@ -81,12 +81,13 @@ export class AuthController {
         res.cookie("jwtToken", access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "none", // para cross-site
+            sameSite: "none",
+            path: "/", // <= aquí
             maxAge: 24 * 60 * 60 * 1000,
         });
 
         return { message: "Login exitoso" };
-    }  
+    }
 
     /* @Post("signin")
     async signIn(@Body() dto: LoginUserDto) {
@@ -106,11 +107,12 @@ export class AuthController {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
             sameSite: "none",
+            path: "/", // <= aquí
             maxAge: 24 * 60 * 60 * 1000,
         });
 
         return { message: "Registro exitoso y sesión iniciada" };
-    } 
+    }
 
     /* @Post("signup")
     async signUp(@Body() dto: CreateUserDto) {
