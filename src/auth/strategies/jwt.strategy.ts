@@ -1,4 +1,4 @@
-/* // src/auth/strategies/jwt.strategy.ts
+// src/auth/strategies/jwt.strategy.ts
 import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy }                 from "@nestjs/passport";
 import { Strategy, ExtractJwt, JwtFromRequestFunction } from "passport-jwt";
@@ -36,10 +36,10 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
     return user;
   }
 }
- */
+ 
 
 // src/auth/strategies/jwt.strategy.ts
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+/* import { Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Strategy, ExtractJwt } from "passport-jwt";
@@ -68,4 +68,4 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
 
         return user;
     }
-}
+} */

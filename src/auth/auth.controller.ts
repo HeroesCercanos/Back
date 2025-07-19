@@ -25,7 +25,7 @@ export class AuthController {
     }
 
     //cookies
-    /*  @Get("google/callback")
+    @Get("google/callback")
     @UseGuards(GoogleAuthGuard)
     async googleCallback(
         @Req() req: Request & { user: any },
@@ -46,9 +46,9 @@ export class AuthController {
         });
 
         return res.redirect(process.env.FRONTEND_URL!);
-    } */
+    } 
 
-    @Get("google/callback")
+    /* @Get("google/callback")
     @UseGuards(GoogleAuthGuard)
     async googleCallback(
         @Req() req: Request & { user: any },
@@ -64,10 +64,10 @@ export class AuthController {
 
         res.redirect(`${process.env.FRONTEND_URL}?token=${access_token}`);
         return { access_token, user };
-    }
-
+    }*/
+ 
     //cookies
-    /*  @Post("signin")
+    @Post("signin")
     @HttpCode(200)
     async signIn(
         @Body() dto: LoginUserDto,
@@ -86,15 +86,15 @@ export class AuthController {
         });
 
         return { message: "Login exitoso" };
-    } */
+    }  
 
-    @Post("signin")
+    /* @Post("signin")
     async signIn(@Body() dto: LoginUserDto) {
         return this.authService.signIn(dto.email, dto.password);
-    }
+    } */
 
     //cookies
-    /*   @Post("signup")
+    @Post("signup")
     @HttpCode(201)
     async signUp(
         @Body() dto: CreateUserDto,
@@ -110,12 +110,12 @@ export class AuthController {
         });
 
         return { message: "Registro exitoso y sesión iniciada" };
-    } */
+    } 
 
-    @Post("signup")
+    /* @Post("signup")
     async signUp(@Body() dto: CreateUserDto) {
         return this.authService.signUp(dto);
-    }
+    } */
 
     @Get("me")
     @UseGuards(AuthGuard("jwt")) // o tu guard personalizado

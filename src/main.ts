@@ -6,8 +6,8 @@ import { loggerGlobal } from "./middlewares/logger.middleware";
 import { ValidationPipe } from "@nestjs/common";
 import { seedAdmin } from "./seeds/admin.seed";
 import { seedQuarter } from "./seeds/quarter.seed";
-// import cookieParser    from 'cookie-parser';
-    
+import * as cookieParser from 'cookie-parser';
+
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
@@ -28,7 +28,7 @@ async function bootstrap() {
     }
 
     // Para poder leer/escribir cookies en Express
-    //app.use(cookieParser());
+    app.use(cookieParser());
 
     app.enableCors({
         origin: [
@@ -37,7 +37,7 @@ async function bootstrap() {
         ],
         credentials: true,
     });
-    
+
     const port = process.env.PORT || 3000;
     await app.listen(port);
 }
