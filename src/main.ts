@@ -6,7 +6,8 @@ import { loggerGlobal } from "./middlewares/logger.middleware";
 import { ValidationPipe } from "@nestjs/common";
 import { seedAdmin } from "./seeds/admin.seed";
 import { seedQuarter } from "./seeds/quarter.seed";
-
+// import cookieParser    from 'cookie-parser';
+    
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
@@ -20,17 +21,23 @@ async function bootstrap() {
         .build();
     const doc = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("docs", app, doc);
-    
 
     if (process.env.NODE_ENV !== "production") {
         await seedAdmin(); // inserta el admin si no existe
         await seedQuarter();
     }
 
+    // Para poder leer/escribir cookies en Express
+    //app.use(cookieParser());
+
     app.enableCors({
-        origin: ["http://localhost:3001","https://heroes-cercanos-front.onrender.com"],
+        origin: [
+            "http://localhost:3001",
+            "https://heroes-cercanos-front.onrender.com",
+        ],
         credentials: true,
     });
+    
     const port = process.env.PORT || 3000;
     await app.listen(port);
 }
