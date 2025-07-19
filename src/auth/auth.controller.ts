@@ -41,7 +41,8 @@ export class AuthController {
         res.cookie("jwtToken", access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
             maxAge: 24 * 60 * 60 * 1000,
         });
 
@@ -81,8 +82,8 @@ export class AuthController {
         res.cookie("jwtToken", access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
-            path: "/", // <= aquí
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
             maxAge: 24 * 60 * 60 * 1000,
         });
 
@@ -106,8 +107,8 @@ export class AuthController {
         res.cookie("jwtToken", access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            sameSite: "none",
-            path: "/", // <= aquí
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
             maxAge: 24 * 60 * 60 * 1000,
         });
 
@@ -120,14 +121,16 @@ export class AuthController {
     } */
 
     @Get("me")
-    @UseGuards(AuthGuard("jwt")) // o tu guard personalizado
+    @UseGuards(AuthGuard("jwt"))
     getProfile(@Req() req) {
         return {
-            id: req.user.id,
-            email: req.user.email,
-            name: req.user.name,
-            role: req.user.role,
-            // cualquier campo que quieras devolver
+            user: {
+                id: req.user.id,
+                email: req.user.email,
+                name: req.user.name,
+                role: req.user.role,
+                // si tienes donations u otros campos:
+            },
         };
     }
 }
