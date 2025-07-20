@@ -31,6 +31,9 @@ export class AuthController {
         @Req() req: Request & { user: any },
         @Res() res: Response,
     ) {
+        // limpio la cookie de sesiones anteriores
+        res.clearCookie("jwtToken", { path: "/" });
+
         const { access_token } = await this.authService.validateGoogleLogin({
             googleId: req.user.googleId,
             email: req.user.email,
@@ -74,11 +77,16 @@ export class AuthController {
         @Body() dto: LoginUserDto,
         @Res({ passthrough: true }) res: Response,
     ) {
+        // 1) limpio la cookie antigua siempre
+        res.clearCookie("jwtToken", { path: "/" });
+
+        // 2) intento login con credenciales
         const { access_token } = await this.authService.signIn(
             dto.email,
             dto.password,
         );
 
+        // 3) si pasó, seteo la cookie nueva
         res.cookie("jwtToken", access_token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -102,6 +110,9 @@ export class AuthController {
         @Body() dto: CreateUserDto,
         @Res({ passthrough: true }) res: Response,
     ) {
+        // idem: limpio antes de crear usuario
+        res.clearCookie("jwtToken", { path: "/" });
+
         const { access_token } = await this.authService.signUp(dto);
 
         res.cookie("jwtToken", access_token, {
