@@ -9,17 +9,14 @@ import { UserModule } from "./user/user.module";
 import { AuthModule } from "./auth/auth.module";
 
 import { MatchConstraint } from "./common/match.decorator";
-import { IncidentController } from "./incidents/incidents.controller";
-import { IncidentService } from "./incidents/incidents.service";
 import { IncidentModule } from "./incidents/incidents.module";
 import { CloudinaryController } from "./cloudinary/cloudinary.controller";
 import { CloudinaryModule } from "./cloudinary/cloudinary.module";
 import { CloudinaryService } from "./cloudinary/cloudinary.service";
 import { MailService } from "./mail/mail.service";
 import { MailModule } from "./mail/mail.module";
-import { DonationService } from "./donations/donations.service";
-import { DonationController } from "./donations/donations.controller";
 import { DonationModule } from "./donations/donations.module";
+import { CampaignModule } from "./campaigns/campaigns.module";
 
 @Module({
     imports: [
@@ -56,14 +53,10 @@ import { DonationModule } from "./donations/donations.module";
         MailModule,
 
         DonationModule,
+
+        CampaignModule,
     ],
     controllers: [AppController, CloudinaryController],
-    providers: [
-        AppService,
-        MatchConstraint,
-        CloudinaryService,
-        MailService,
-        
-    ],
+    providers: [AppService, MatchConstraint, CloudinaryService, MailService],
 })
 export class AppModule {}
