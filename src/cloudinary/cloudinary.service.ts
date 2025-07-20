@@ -1,8 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { v2 as cloudinary, UploadApiResponse } from "cloudinary";
 import { ConfigService } from "@nestjs/config";
-import { join } from "path";
-import { UploadMediaDto } from "./dto/cloudinary.dto"; 
+import { UploadMediaDto } from "./dto/cloudinary.dto";
 
 @Injectable()
 export class CloudinaryService {
@@ -23,15 +22,18 @@ export class CloudinaryService {
             folder: "trainings",
             use_filename: true,
             unique_filename: false,
+            context: dto.caption ? `caption=${dto.caption}` : undefined,
         });
     }
 
     async listMediaFromFolder(folder: string) {
         const result = await cloudinary.search
             .expression(`folder:${folder}`)
+            .with_field("context")
             .sort_by("public_id", "desc")
             .max_results(100)
             .execute();
+
         return result.resources;
     }
 
@@ -42,4 +44,14 @@ export class CloudinaryService {
             .execute();
         return result.resources?.[0] || null;
     }
+
+    async deleteMedia(publicId: string) {
+    // Obtener el recurso para determinar el tipo
+    const resource = await this.getMediaByPublicId(publicId);
+    if (!resource) throw new Error('Media not found');
+
+    return cloudinary.uploader.destroy(publicId, {
+        resource_type: resource.resource_type,
+    });
+}
 }

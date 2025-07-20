@@ -1,10 +1,6 @@
 // src/campaign/campaign.entity.ts
 import { Entity, Column, PrimaryGeneratedColumn } from "typeorm";
 
-export enum CampaignStatus {
-    ACTIVE = "active",
-    FINALIZADA = "finalizada",
-}
 
 @Entity({ name: "campaigns" })
 export class Campaign {
@@ -23,6 +19,6 @@ export class Campaign {
     @Column({ type: "date" })
     endDate: Date;
 
-    @Column({ type: "enum", enum: CampaignStatus, default: CampaignStatus.ACTIVE })
-    status: CampaignStatus; 
+    @Column({ type: "boolean", default: true })
+    isActive: boolean; 
 }

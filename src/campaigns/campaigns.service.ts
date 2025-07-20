@@ -2,10 +2,12 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Campaign, CampaignStatus } from "./entity/campaign.entity";
+import { Cron, CronExpression } from "@nestjs/schedule";
+
+import { Campaign } from "./entity/campaign.entity";
 import { CreateCampaignDto } from "./dto/create-campaign.dto";
 import { UpdateCampaignDto } from "./dto/update-campaign.dto";
-import { Cron, CronExpression } from "@nestjs/schedule";
+
 @Injectable()
 export class CampaignService {
     constructor(
@@ -18,21 +20,22 @@ export class CampaignService {
             ...dto,
             startDate: new Date(dto.startDate),
             endDate: new Date(dto.endDate),
-            status: CampaignStatus.ACTIVE,
+            isActive: true, // por defecto activo
         });
         return this.repo.save(campaign);
     }
 
     async findAll(): Promise<Campaign[]> {
-        // opcional: actualizar expiradas antes de devolver
         await this.markExpiredCampaigns();
         return this.repo.find();
     }
 
     async findOne(id: string): Promise<Campaign> {
-        const c = await this.repo.findOne({ where: { id } });
-        if (!c) throw new NotFoundException(`Campaign ${id} no encontrada`);
-        return c;
+        const campaign = await this.repo.findOne({ where: { id } });
+        if (!campaign) {
+            throw new NotFoundException(`Campaign ${id} no encontrada`);
+        }
+        return campaign;
     }
 
     async remove(id: string): Promise<void> {
@@ -44,35 +47,36 @@ export class CampaignService {
 
     async update(id: string, dto: UpdateCampaignDto): Promise<Campaign> {
         const campaign = await this.findOne(id);
-        Object.assign(campaign, {
-            ...dto,
-            // si actualizan fechas, asegúrate de convertir:
-            ...(dto.startDate && { startDate: new Date(dto.startDate) }),
-            ...(dto.endDate && { endDate: new Date(dto.endDate) }),
-        });
+
+        // Actualizo solo los campos que vienen en el DTO
+        if (dto.title !== undefined) campaign.title = dto.title;
+        if (dto.description !== undefined)
+            campaign.description = dto.description;
+        if (dto.startDate) campaign.startDate = new Date(dto.startDate);
+        if (dto.endDate) campaign.endDate = new Date(dto.endDate);
+        if (dto.isActive !== undefined) campaign.isActive = dto.isActive;
+
         return this.repo.save(campaign);
     }
 
     async finish(id: string): Promise<Campaign> {
-        return this.update(id, { status: CampaignStatus.FINALIZADA });
+        return this.update(id, { isActive: false });
     }
 
+    /** Marca como finalizada todas las campañas activas cuya endDate ya pasó */
     private async markExpiredCampaigns(): Promise<void> {
         await this.repo
             .createQueryBuilder()
             .update(Campaign)
-            .set({ status: CampaignStatus.FINALIZADA })
-            .where("status = :active", { active: CampaignStatus.ACTIVE })
+            .set({ isActive: false })
+            .where("isActive = :active", { active: true })
             .andWhere("endDate < :today", { today: new Date() })
             .execute();
     }
 
-    /** Job diario a medianoche para finalizar campañas expiradas automáticamente */
+    /** Job diario a medianoche para finalizar automáticamente las campañas expiradas */
     @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
     handleCron() {
         return this.markExpiredCampaigns();
     }
-
-    // opcional: update
-    // async update(id: number, dto: UpdateCampaignDto): Promise<Campaign> { ... }
 }
