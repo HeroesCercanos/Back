@@ -1,20 +1,51 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner, TableColumn } from "typeorm";
 
 export class Cambiandostatuscampaña1753025392278 implements MigrationInterface {
-    name = 'Cambiandostatuscampaña1753025392278'
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "campaigns" RENAME COLUMN "isActive" TO "status"`);
-        await queryRunner.query(`ALTER TABLE "campaigns" DROP COLUMN "status"`);
-        await queryRunner.query(`CREATE TYPE "public"."campaigns_status_enum" AS ENUM('active', 'finalizada')`);
-        await queryRunner.query(`ALTER TABLE "campaigns" ADD "status" "public"."campaigns_status_enum" NOT NULL DEFAULT 'active'`);
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    // 1) Si no existe aún la columna 'status', la agregamos
+    const hasStatus = await queryRunner.hasColumn("campaigns", "status");
+    if (!hasStatus) {
+      await queryRunner.addColumn(
+        "campaigns",
+        new TableColumn({
+          name: "status",
+          type: "enum",
+          enum: ["active", "finalizada"],
+          default: `'active'`,
+        }),
+      );
     }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "campaigns" DROP COLUMN "status"`);
-        await queryRunner.query(`DROP TYPE "public"."campaigns_status_enum"`);
-        await queryRunner.query(`ALTER TABLE "campaigns" ADD "status" boolean NOT NULL DEFAULT true`);
-        await queryRunner.query(`ALTER TABLE "campaigns" RENAME COLUMN "status" TO "isActive"`);
+    // 2) Sólo si existe 'isActive', copiamos sus valores y la borramos
+    const hasIsActive = await queryRunner.hasColumn("campaigns", "isActive");
+    if (hasIsActive) {
+      // Copiar valores: true → active, false → finalizada
+      await queryRunner.query(`
+        UPDATE campaigns
+           SET status = CASE WHEN "isActive" THEN 'active' ELSE 'finalizada' END
+      `);
+      // Luego la eliminamos
+      await queryRunner.dropColumn("campaigns", "isActive");
     }
+  }
 
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    // Para revertir, si quieres volver a isActive:
+    const hasStatus = await queryRunner.hasColumn("campaigns", "status");
+    if (hasStatus) {
+      await queryRunner.addColumn(
+        "campaigns",
+        new TableColumn({
+          name: "isActive",
+          type: "boolean",
+          default: true,
+        }),
+      );
+      await queryRunner.query(`
+        UPDATE campaigns
+           SET "isActive" = CASE WHEN status = 'active' THEN true ELSE false END
+      `);
+      await queryRunner.dropColumn("campaigns", "status");
+    }
+  }
 }
