@@ -44,6 +44,7 @@
         "cloudinary": "^2.7.0",
         "cookie-parser": "^1.4.7",
         "dotenv": "^17.0.1",
+        "mercadopago": "^2.8.0",
         "multer": "^2.0.1",
         "nodemailer": "^7.0.5",
         "passport": "^0.7.0",
