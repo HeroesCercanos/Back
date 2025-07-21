@@ -53,7 +53,7 @@ export class AuthService {
     }
 
     /** Registro de usuario + devolución de JWT */
-    async signUp(dto: CreateUserDto) {
+    /*    async signUp(dto: CreateUserDto) {
         // 1) Verifico que no exista otro usuario con ese email
         const dbUser = await this.usersService.findByEmail(dto.email);
         if (dbUser) {
@@ -79,8 +79,31 @@ export class AuthService {
         return {
             access_token: this.jwtService.sign(payload),
         };
-    }
+    } */
+    async signUp(dto: CreateUserDto) {
+        // 1) Verifico que no exista otro usuario con ese email
+        const dbUser = await this.usersService.findByEmail(dto.email);
+        if (dbUser) {
+            throw new BadRequestException("El email ya está en uso");
+        }
 
+        // 2) Hasheo la contraseña
+        const { password, confirmPassword, ...rest } = dto;
+        if (password !== confirmPassword) {
+            throw new BadRequestException("Las contraseñas no coinciden");
+        }
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // 3) Creo el usuario en la BD
+        const user = await this.usersService.create({
+            ...rest, // name, email, etc.
+            password: hashedPassword,
+            role: Role.USER, // Por si querés forzarlo
+        });
+
+        // 4) No devuelvo token, solo confirmo creación
+        return { message: "Usuario creado exitosamente", userId: user.id };
+    }
     async validateGoogleLogin(profile: {
         googleId: string;
         email: string;
