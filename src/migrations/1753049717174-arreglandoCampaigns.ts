@@ -1,56 +1,73 @@
 // src/migrations/1753049717174-arreglandoCampaigns.ts
+
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class RevertStatusEnumToBooleanIsActive1753049717174 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    // Sólo si existe “status”
-    if (await queryRunner.hasColumn("campaigns", "status")) {
-      // 1) Quitar DEFAULT de status
-      await queryRunner.query(`
+export class RevertStatusEnumToBooleanIsActive1753049717174
+    implements MigrationInterface
+{
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        // Solo si existe la columna 'status'
+        if (await queryRunner.hasColumn("campaigns", "status")) {
+            // 1) Quitar DEFAULT de status
+            await queryRunner.query(`
         ALTER TABLE "campaigns"
         ALTER COLUMN "status" DROP DEFAULT;
       `);
 
-      // 2) Transformar status → boolean
-      await queryRunner.query(`
+            // 2) Convertir status (enum) → boolean
+            await queryRunner.query(`
         ALTER TABLE "campaigns"
         ALTER COLUMN "status" TYPE boolean
         USING (
-          CASE WHEN "status" = 'active' THEN true ELSE false END
+          CASE WHEN "status" = 'active' THEN true
+               ELSE false
+          END
         );
       `);
 
-      // 3) Renombrar a isActive
-      await queryRunner.query(`
+            // 3) Eliminar la columna isActive antigua, si existe
+            if (await queryRunner.hasColumn("campaigns", "isActive")) {
+                await queryRunner.query(`
+          ALTER TABLE "campaigns"
+          DROP COLUMN "isActive";
+        `);
+            }
+
+            // 4) Renombrar status → isActive
+            await queryRunner.query(`
         ALTER TABLE "campaigns"
         RENAME COLUMN "status" TO "isActive";
       `);
 
-      // 4) Eliminar el enum residual
-      await queryRunner.query(`
+            // 5) Restaurar DEFAULT true
+            await queryRunner.query(`
+        ALTER TABLE "campaigns"
+        ALTER COLUMN "isActive" SET DEFAULT true;
+      `);
+
+            // 6) Eliminar el tipo ENUM residual
+            await queryRunner.query(`
         DROP TYPE IF EXISTS "public"."campaigns_status_enum";
       `);
+        }
     }
 
-    // Si ya existía isActive como booleano, no hace nada
-  }
-
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    // Para revertir: sólo si existe isActive
-    if (await queryRunner.hasColumn("campaigns", "isActive")) {
-      // 1) Recrear el enum
-      await queryRunner.query(`
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        // Para deshacer, solo si existe isActive
+        if (await queryRunner.hasColumn("campaigns", "isActive")) {
+            // 1) Recrear el enum
+            await queryRunner.query(`
         CREATE TYPE "public"."campaigns_status_enum" AS ENUM('active','finalizada');
       `);
 
-      // 2) Renombrar isActive → status
-      await queryRunner.query(`
+            // 2) Renombrar isActive → status
+            await queryRunner.query(`
         ALTER TABLE "campaigns"
         RENAME COLUMN "isActive" TO "status";
       `);
 
-      // 3) Boolean → enum
-      await queryRunner.query(`
+            // 3) Boolean → enum
+            await queryRunner.query(`
         ALTER TABLE "campaigns"
         ALTER COLUMN "status" TYPE "public"."campaigns_status_enum"
         USING (
@@ -60,11 +77,11 @@ export class RevertStatusEnumToBooleanIsActive1753049717174 implements Migration
         );
       `);
 
-      // 4) Restaurar DEFAULT
-      await queryRunner.query(`
+            // 4) Restaurar DEFAULT 'active'
+            await queryRunner.query(`
         ALTER TABLE "campaigns"
         ALTER COLUMN "status" SET DEFAULT 'active';
       `);
+        }
     }
-  }
 }
