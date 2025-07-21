@@ -106,24 +106,12 @@ export class AuthController {
     //cookies
     @Post("signup")
     @HttpCode(201)
-    async signUp(
-        @Body() dto: CreateUserDto,
-        @Res({ passthrough: true }) res: Response,
-    ) {
-        // idem: limpio antes de crear usuario
-        res.clearCookie("jwtToken", { path: "/" });
+    async signUp(@Body() dto: CreateUserDto) {
+        // 1) Creo el usuario (pero no genero ni seteo ningún token)
+        await this.authService.signUp(dto);
 
-        const { access_token } = await this.authService.signUp(dto);
-
-        res.cookie("jwtToken", access_token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            path: "/",
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        return { message: "Registro exitoso y sesión iniciada" };
+        // 2) Devuelvo mensaje para que el front redirija al login
+        return { message: "Registro exitoso. Por favor inicia sesión." };
     }
 
     /* @Post("signup")
