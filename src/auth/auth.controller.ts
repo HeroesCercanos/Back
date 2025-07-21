@@ -43,8 +43,8 @@ export class AuthController {
 
         res.cookie("jwtToken", access_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: false,
+            sameSite: "lax",
             path: "/",
             maxAge: 24 * 60 * 60 * 1000,
         });
@@ -89,8 +89,8 @@ export class AuthController {
         // 3) si pasó, seteo la cookie nueva
         res.cookie("jwtToken", access_token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            secure: false,
+            sameSite: "lax",
             path: "/",
             maxAge: 24 * 60 * 60 * 1000,
         });
@@ -143,5 +143,18 @@ export class AuthController {
                 // si tienes donations u otros campos:
             },
         };
+    }
+
+    @Post("logout")
+    @HttpCode(200)
+    logout(@Res({ passthrough: true }) res: Response) {
+        res.clearCookie("jwtToken", {
+            path: "/",
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            // domain: '.tu-dominio.com' si usas subdominios
+        });
+        return { message: "Logout exitoso" };
     }
 }
