@@ -8,14 +8,16 @@ import {
     Delete,
     UseGuards,
     Patch,
+    Req,
 } from "@nestjs/common";
 import { CampaignService } from "./campaigns.service";
 import { CreateCampaignDto } from "./dto/create-campaign.dto";
 import { AuthGuard } from "@nestjs/passport";
 import { RolesGuard } from "src/auth/guards/google-auth/roles.guard";
 import { Role } from "src/user/role.enum";
-import { Roles } from "src/cloudinary/roles.decorator";
+import { Roles } from "src/auth/decorator/roles.decorator";
 import { UpdateCampaignDto } from "./dto/update-campaign.dto";
+
 
 @Controller("campaigns")
 export class CampaignController {
@@ -34,7 +36,8 @@ export class CampaignController {
     @UseGuards(AuthGuard("jwt"), RolesGuard)
     @Roles(Role.ADMIN)
     @Post()
-    create(@Body() dto: CreateCampaignDto) {
+    create(@Req() req, @Body() dto: CreateCampaignDto) {
+        console.log(">>> req.user en create:", req.user);
         return this.service.create(dto);
     }
 
@@ -49,8 +52,7 @@ export class CampaignController {
     @Roles(Role.ADMIN)
     @Patch(":id")
     edit(@Param("id") id: string, @Body() dto: UpdateCampaignDto) {
-        return this.service.update(id, dto);
-    }
+        return this.service.update(id, dto);    }
 
     @UseGuards(AuthGuard("jwt"), RolesGuard)
     @Roles(Role.ADMIN)
