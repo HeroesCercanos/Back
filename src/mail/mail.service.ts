@@ -48,35 +48,54 @@ export class MailService {
         });
         this.logger.log(`Donation email sent: ${info.messageId}`);
     }
+async sendIncidentEmail(dto: IncidentEmailDto) {
+  const { name, email, type, location } = dto;
 
-    async sendIncidentEmail(dto: IncidentEmailDto) {
-    const { name, email, type, location } = dto;
+  try {
+    // 📤 Mail para el administrador
+    const adminMail = await this.transporter.sendMail({
+      from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+      to: this.config.get("ADMIN_EMAIL"),
+      subject: `📍 Nuevo incidente reportado: ${type}`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #d32f2f;">🔔 Se ha reportado un incidente</h2>
+          <p><strong>Tipo de incidente:</strong> ${type}</p>
+          <p><strong>Ubicación:</strong> ${location}</p>
+          <p><strong>Reportado por:</strong> ${name} (${email})</p>
+          <hr style="margin: 20px 0;" />
+          <p style="font-size: 14px;">Mensaje generado automáticamente por la plataforma <strong>Héroes Cercanos</strong>.</p>
+        </div>
+      `,
+    });
 
-    try {
-        const info = await this.transporter.sendMail({
-            from: `"Mi App" <${this.config.get("MAIL_FROM")}>`,
-            to: [this.config.get("ADMIN_EMAIL"), email],
-            subject: `Nuevo incidente: ${type}`,
-            html: `<p>Reporte de <b>${type}</b> en ${location}.</p>
-                   <p>Usuario: ${name} (${email})</p>`,
-        });
-        this.logger.log(`Incident email sent: ${info.messageId}`);
-        return info;
-    } catch (error) {
-        console.error("Error interno en sendIncidentEmail:", error); // 👈 AGREGAR ESTO
-        throw error;
-    }
+    // 📤 Mail para el usuario
+    const userMail = await this.transporter.sendMail({
+      from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+      to: email,
+      subject: `✅ Recibimos tu reporte de incidente`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #2e7d32;">¡Gracias por tu colaboración, ${name}!</h2>
+          <p>Tu reporte de <strong>${type}</strong> en la ubicación:</p>
+          <p><em>${location}</em></p>
+          <p>ha sido recibido correctamente por nuestro equipo.</p>
+          <p>Nos pondremos en contacto en caso de ser necesario.</p>
+          <hr style="margin: 20px 0;" />
+          <p style="font-size: 14px;">Este mensaje fue enviado desde la plataforma <strong>Héroes Cercanos</strong>.</p>
+        </div>
+      `,
+    });
+
+    this.logger.log(`Incident email sent to admin: ${adminMail.messageId}`);
+    this.logger.log(`Incident email sent to user: ${userMail.messageId}`);
+
+    return { admin: adminMail, user: userMail };
+  } catch (error) {
+    console.error("Error interno en sendIncidentEmail:", error);
+    throw error;
+  }
 }
 
-    /*async sendIncidentEmail(dto: IncidentEmailDto) {
-        const { name, email, type, location } = dto;
-        const info = await this.transporter.sendMail({
-            from: `"Mi App" <${this.config.get("MAIL_FROM")}>`,
-            to: this.config.get("ADMIN_EMAIL"), // o bien a dto.email si quieres notificar al usuario
-            subject: `Nuevo incidente: ${type}`,
-            html: `<p>Reporte de <b>${type}</b> en ${location}.</p>
-             <p>Usuario: ${name} (${email})</p>`,
-        });
-        this.logger.log(`Incident email sent: ${info.messageId}`);
-    }*/
+    
 }
