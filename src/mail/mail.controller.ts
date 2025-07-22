@@ -45,9 +45,12 @@ export class MailController {
     @Post("send-incident-email")
     async sendIncident(@Body() dto: IncidentEmailDto) {
         try {
-            await this.mailService.sendIncidentEmail(dto);
+            
+            const result = await this.mailService.sendIncidentEmail(dto);
+           
             return { success: true };
         } catch (err) {
+            
             throw new HttpException(
                 "Error enviando email de incidente",
                 HttpStatus.INTERNAL_SERVER_ERROR,

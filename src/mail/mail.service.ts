@@ -14,8 +14,10 @@ export class MailService {
     constructor(private config: ConfigService) {
         this.transporter = nodemailer.createTransport({
             host: this.config.get("MAIL_HOST"),
-            port: this.config.get<number>("MAIL_PORT"),
-            secure: this.config.get<boolean>("MAIL_SECURE"), // true si usas 465
+            //port: this.config.get<number>("MAIL_PORT"),
+            //secure: this.config.get<boolean>("MAIL_SECURE"), // true si usas 465
+            secure: false, // ← ⚠️ fijamos directamente false
+        requireTLS: true, // ← ✅ esto fuerza STARTTLS
             auth: {
                 user: this.config.get("MAIL_USER"),
                 pass: this.config.get("MAIL_PASS"),
@@ -48,6 +50,25 @@ export class MailService {
     }
 
     async sendIncidentEmail(dto: IncidentEmailDto) {
+    const { name, email, type, location } = dto;
+
+    try {
+        const info = await this.transporter.sendMail({
+            from: `"Mi App" <${this.config.get("MAIL_FROM")}>`,
+            to: [this.config.get("ADMIN_EMAIL"), email],
+            subject: `Nuevo incidente: ${type}`,
+            html: `<p>Reporte de <b>${type}</b> en ${location}.</p>
+                   <p>Usuario: ${name} (${email})</p>`,
+        });
+        this.logger.log(`Incident email sent: ${info.messageId}`);
+        return info;
+    } catch (error) {
+        console.error("Error interno en sendIncidentEmail:", error); // 👈 AGREGAR ESTO
+        throw error;
+    }
+}
+
+    /*async sendIncidentEmail(dto: IncidentEmailDto) {
         const { name, email, type, location } = dto;
         const info = await this.transporter.sendMail({
             from: `"Mi App" <${this.config.get("MAIL_FROM")}>`,
@@ -57,5 +78,5 @@ export class MailService {
              <p>Usuario: ${name} (${email})</p>`,
         });
         this.logger.log(`Incident email sent: ${info.messageId}`);
-    }
+    }*/
 }
