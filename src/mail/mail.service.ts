@@ -14,7 +14,7 @@ export class MailService {
     constructor(private config: ConfigService) {
         this.transporter = nodemailer.createTransport({
             host: this.config.get("MAIL_HOST"),
-            //port: this.config.get<number>("MAIL_PORT"),
+            port: this.config.get<number>("MAIL_PORT"),
             //secure: this.config.get<boolean>("MAIL_SECURE"), // true si usas 465
             secure: false, // ← ⚠️ fijamos directamente false
         requireTLS: true, // ← ✅ esto fuerza STARTTLS
