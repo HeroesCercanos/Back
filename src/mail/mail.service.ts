@@ -14,10 +14,8 @@ export class MailService {
     constructor(private config: ConfigService) {
         this.transporter = nodemailer.createTransport({
             host: this.config.get("MAIL_HOST"),
-            //port: this.config.get<number>("MAIL_PORT"),
-            //secure: this.config.get<boolean>("MAIL_SECURE"), // true si usas 465
             secure: false, // ← ⚠️ fijamos directamente false
-        requireTLS: true, // ← ✅ esto fuerza STARTTLS
+            requireTLS: true, // ← ✅ esto fuerza STARTTLS
             auth: {
                 user: this.config.get("MAIL_USER"),
                 pass: this.config.get("MAIL_PASS"),
@@ -37,17 +35,52 @@ export class MailService {
         this.logger.log(`Registration email sent: ${info.messageId}`);
     }
 
-    async sendDonationEmail(dto: DonationEmailDto) {
-        const { name, email, amount } = dto;
-        const info = await this.transporter.sendMail({
-            from: `"Mi App" <${this.config.get("MAIL_FROM")}>`,
-            to: email,
-            subject: `Donación recibida: $${amount}`,
-            html: `<p>Hola ${name},</p>
-             <p>Hemos recibido tu donación de <b>$${amount}</b>. ¡Muchas gracias!</p>`,
-        });
-        this.logger.log(`Donation email sent: ${info.messageId}`);
-    }
+   async sendDonationEmail(dto: DonationEmailDto) {
+  const { name, email, amount } = dto;
+
+  try {
+    // 📤 Mail para el administrador
+    const adminMail = await this.transporter.sendMail({
+      from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+      to: this.config.get("ADMIN_EMAIL"),
+      subject: `💰 Nueva donación recibida`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #1976d2;">🎉 ¡Nueva donación recibida!</h2>
+          <p><strong>Donante:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Monto:</strong> $${amount}</p>
+          <hr style="margin: 20px 0;" />
+          <p style="font-size: 14px;">Este mensaje fue generado automáticamente por la plataforma <strong>Héroes Cercanos</strong>.</p>
+        </div>
+      `,
+    });
+
+    // 📤 Mail para el usuario
+    const userMail = await this.transporter.sendMail({
+      from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+      to: email,
+      subject: `✅ ¡Gracias por tu donación!`,
+      html: `
+        <div style="font-family: Arial, sans-serif; color: #333;">
+          <h2 style="color: #2e7d32;">¡Gracias por tu aporte, ${name}!</h2>
+          <p>Hemos recibido tu donación de <strong>$${amount}</strong>.</p>
+          <p>Tu colaboración nos ayuda a seguir apoyando a los cuarteles de bomberos voluntarios.</p>
+          <hr style="margin: 20px 0;" />
+          <p style="font-size: 14px;">Este mensaje fue enviado desde la plataforma <strong>Héroes Cercanos</strong>.</p>
+        </div>
+      `,
+    });
+
+    this.logger.log(`Donation email sent to admin: ${adminMail.messageId}`);
+    this.logger.log(`Donation email sent to user: ${userMail.messageId}`);
+
+    return { admin: adminMail, user: userMail };
+  } catch (error) {
+    console.error("Error interno en sendDonationEmail:", error);
+    throw error;
+  }
+}
 async sendIncidentEmail(dto: IncidentEmailDto) {
   const { name, email, type, location } = dto;
 
