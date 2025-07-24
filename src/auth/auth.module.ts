@@ -10,6 +10,7 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { User } from "src/user/entity/user.entity";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { MailModule } from "src/mail/mail.module";
+import { MailService } from "src/mail/mail.service";
 
 @Module({
     imports: [
@@ -22,7 +23,7 @@ import { MailModule } from "src/mail/mail.module";
             signOptions: { expiresIn: "1h" },
         }),
     ],
-    providers: [AuthService, GoogleStrategy, JwtStrategy, UserService],
+    providers: [AuthService, GoogleStrategy, JwtStrategy, UserService, MailService],
     controllers: [AuthController],
 
 })
