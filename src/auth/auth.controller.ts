@@ -14,10 +14,14 @@ import { LoginUserDto } from "./dto/login-user.dto";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { Request, Response } from "express";
 import { GoogleAuthGuard } from "./guards/google-auth/google-auth.guard";
+import { UserService } from "src/user/user.service";
 
 @Controller("auth")
 export class AuthController {
-    constructor(private authService: AuthService) {}
+    constructor(
+        private authService: AuthService,
+        private userService: UserService,
+    ) {}
     @Get("google")
     @UseGuards(GoogleAuthGuard)
     async googleAuth() {
@@ -51,6 +55,23 @@ export class AuthController {
 
         return res.redirect(process.env.FRONTEND_URL!);
     }
+
+    // Paso A: el usuario ingresa su email
+    @Post("forgot-password")
+    forgot(@Body("email") email: string) {
+        return this.authService.forgotPassword(email);
+    }
+
+    // Paso B: el usuario envía token + nueva contraseña
+    @Post("reset-password")
+    reset(
+        @Body("token") token: string,
+        @Body("newPassword") newPassword: string,
+    ) {
+        return this.authService.resetPassword(token, newPassword);
+    }
+
+    // auth.controller.ts
 
     /* @Get("google/callback")
     @UseGuards(GoogleAuthGuard)

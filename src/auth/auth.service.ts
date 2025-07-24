@@ -2,6 +2,7 @@
 import {
     BadRequestException,
     Injectable,
+    NotFoundException,
     UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
@@ -10,12 +11,15 @@ import { UserService } from "src/user/user.service";
 import { CreateUserDto } from "./dto/create-user.dto";
 import { User } from "src/user/entity/user.entity";
 import { Role } from "src/user/role.enum";
+import * as crypto from "crypto";
+import { MailService } from "src/mail/mail.service";
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UserService,
         private readonly jwtService: JwtService,
+        private readonly mailService: MailService
     ) {}
 
     /** Valida credenciales y firma JWT */
@@ -163,5 +167,31 @@ export class AuthService {
                 role: user.role,
             },
         };
+    }
+
+    // 1) Solicitar recuperación
+    async forgotPassword(email: string): Promise<void> {
+        // 1) Intento de buscar usuario
+        const user = await this.usersService.findByEmail(email);
+        // 2) Null check para TS y seguridad
+        if (!user) {
+            throw new NotFoundException("Usuario no encontrado");
+        }
+
+        // 3) Generación de token y expiración
+        const token = crypto.randomBytes(32).toString("hex");
+        const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+
+        // 4) Guardado del token
+        await this.usersService.saveResetToken(user.id, token, expires);
+
+        // 5) Envío del email (usando tu MailService)
+        await this.mailService.sendResetPassword({ email, token });
+    }
+
+    // 2) Resetear contraseña con token
+    async resetPassword(token: string, newPassword: string): Promise<void> {
+        const user = await this.usersService.findByResetToken(token);
+        await this.usersService.updatePassword(user.id, newPassword);
     }
 }

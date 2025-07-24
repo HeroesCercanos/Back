@@ -5,6 +5,8 @@ import * as nodemailer from "nodemailer";
 import { RegistrationEmailDto } from "./dto/registration-email.dto";
 import { DonationEmailDto } from "./dto/donation-email.dto";
 import { IncidentEmailDto } from "./dto/incident-email.dto";
+import { ResetPasswordEmailDto } from "./dto/reset-password-email.dto";
+
 
 @Injectable()
 export class MailService {
@@ -25,14 +27,14 @@ export class MailService {
         });
     }
 
-  async sendRegistrationEmail(dto: RegistrationEmailDto) {
-  const { name, email } = dto;
+    async sendRegistrationEmail(dto: RegistrationEmailDto) {
+        const { name, email } = dto;
 
-  const info = await this.transporter.sendMail({
-    from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
-    to: email,
-    subject: `🎉 ¡Bienvenido, ${name}!`,
-    html: `
+        const info = await this.transporter.sendMail({
+            from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+            to: email,
+            subject: `🎉 ¡Bienvenido, ${name}!`,
+            html: `
   <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #d32f2f; text-align: center;">¡Hola ${name}, bienvenido a Héroes Cercanos!</h2>
 
@@ -64,22 +66,21 @@ export class MailService {
       </footer>
     </div>
   </div>
-`
+`,
+        });
 
-  });
+        this.logger.log(`Registration email sent: ${info.messageId}`);
+    }
 
-  this.logger.log(`Registration email sent: ${info.messageId}`);
-}
+    async sendDonationEmail(dto: DonationEmailDto) {
+        const { name, email, amount } = dto;
 
-async sendDonationEmail(dto: DonationEmailDto) {
-  const { name, email, amount } = dto;
-
-  try {
-    const adminMail = await this.transporter.sendMail({
-      from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
-      to: this.config.get("ADMIN_EMAIL"),
-      subject: `💰 Nueva donación recibida`,
-      html: `
+        try {
+            const adminMail = await this.transporter.sendMail({
+                from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+                to: this.config.get("ADMIN_EMAIL"),
+                subject: `💰 Nueva donación recibida`,
+                html: `
   <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #1976d2; text-align: center;">🎉 ¡Nueva donación recibida!</h2>
 
@@ -102,15 +103,14 @@ async sendDonationEmail(dto: DonationEmailDto) {
       </footer>
     </div>
   </div>
-`
+`,
+            });
 
-    });
-
-    const userMail = await this.transporter.sendMail({
-  from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
-  to: email,
-  subject: `✅ ¡Gracias por tu donación!`,
-  html: `
+            const userMail = await this.transporter.sendMail({
+                from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+                to: email,
+                subject: `✅ ¡Gracias por tu donación!`,
+                html: `
   <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #d32f2f; text-align: center;">¡Gracias por tu aporte, ${name}!</h2>
 
@@ -135,30 +135,32 @@ async sendDonationEmail(dto: DonationEmailDto) {
       </footer>
     </div>
   </div>
-`
+`,
+            });
 
-});
+            this.logger.log(
+                `Donation email sent to admin: ${adminMail.messageId}`,
+            );
+            this.logger.log(
+                `Donation email sent to user: ${userMail.messageId}`,
+            );
 
+            return { admin: adminMail, user: userMail };
+        } catch (error) {
+            console.error("Error interno en sendDonationEmail:", error);
+            throw error;
+        }
+    }
 
-    this.logger.log(`Donation email sent to admin: ${adminMail.messageId}`);
-    this.logger.log(`Donation email sent to user: ${userMail.messageId}`);
+    async sendIncidentEmail(dto: IncidentEmailDto) {
+        const { name, email, type, location } = dto;
 
-    return { admin: adminMail, user: userMail };
-  } catch (error) {
-    console.error("Error interno en sendDonationEmail:", error);
-    throw error;
-  }
-}
-
-async sendIncidentEmail(dto: IncidentEmailDto) {
-  const { name, email, type, location } = dto;
-
-  try {
-    const adminMail = await this.transporter.sendMail({
-      from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
-      to: this.config.get("ADMIN_EMAIL"),
-      subject: `📍 Nuevo incidente reportado: ${type}`,
-      html: `
+        try {
+            const adminMail = await this.transporter.sendMail({
+                from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+                to: this.config.get("ADMIN_EMAIL"),
+                subject: `📍 Nuevo incidente reportado: ${type}`,
+                html: `
   <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #d32f2f; text-align: center;">🔔 Se ha reportado un incidente</h2>
 
@@ -180,15 +182,14 @@ async sendIncidentEmail(dto: IncidentEmailDto) {
       </footer>
     </div>
   </div>
-`
+`,
+            });
 
-    });
-
-    const userMail = await this.transporter.sendMail({
-  from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
-  to: email,
-  subject: `✅ Recibimos tu reporte de incidente`,
-  html: `
+            const userMail = await this.transporter.sendMail({
+                from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+                to: email,
+                subject: `✅ Recibimos tu reporte de incidente`,
+                html: `
   <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
     <h2 style="color: #2e7d32; text-align: center;">¡Gracias por tu colaboración, ${name}!</h2>
 
@@ -214,17 +215,52 @@ async sendIncidentEmail(dto: IncidentEmailDto) {
       </footer>
     </div>
   </div>
-`
+`,
+            });
 
-});
+            this.logger.log(
+                `Incident email sent to admin: ${adminMail.messageId}`,
+            );
+            this.logger.log(
+                `Incident email sent to user: ${userMail.messageId}`,
+            );
 
-    this.logger.log(`Incident email sent to admin: ${adminMail.messageId}`);
-    this.logger.log(`Incident email sent to user: ${userMail.messageId}`);
+            return { admin: adminMail, user: userMail };
+        } catch (error) {
+            console.error("Error interno en sendIncidentEmail:", error);
+            throw error;
+        }
+    }
 
-    return { admin: adminMail, user: userMail };
-  } catch (error) {
-    console.error("Error interno en sendIncidentEmail:", error);
-    throw error;
-  }
-}
+    /**
+     * Envía el email para resetear contraseña
+     * @param dto.email destino
+     * @param dto.token token de recuperación
+     */
+    async sendResetPassword(dto: ResetPasswordEmailDto) {
+        const { email, token } = dto;
+        const frontendUrl = this.config.get<string>("FRONTEND_URL");
+        const link = `${frontendUrl}/reset-password?token=${token}`;
+
+        const info = await this.transporter.sendMail({
+            from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+            to: email,
+            subject: "🔐 Recuperación de contraseña",
+            html: `
+<div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+  <h2 style="color: #d32f2f; text-align: center;">Recupera tu contraseña</h2>
+  <p>Hemos recibido una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace para continuar:</p>
+  <p><a href="${link}" target="_blank" style="color: #1976d2;">Restablecer contraseña</a></p>
+  <p>Este enlace expirará en 1 hora. Si no solicitaste este cambio, puedes ignorar este email.</p>
+  <hr style="margin: 30px 0;" />
+  <footer style="font-size: 13px; color: #333; text-align: center;">
+    Si tienes problemas, copia y pega esta URL en tu navegador:<br/>
+    <small>${link}</small>
+  </footer>
+</div>
+`,
+        });
+
+        this.logger.log(`Password reset email sent: ${info.messageId}`);
+    }
 }

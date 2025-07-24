@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "./entity/user.entity"; // ajustá ruta si necesario
+import bcrypt from "bcrypt";
 
 @Injectable()
 export class UserService {
@@ -51,5 +52,41 @@ export class UserService {
         await this.userRepository.remove(user);
     }
 
-    
+    // Guardar token y expiración
+    async saveResetToken(
+        userId: string,
+        token: string,
+        expires: Date,
+    ): Promise<void> {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
+        user.resetToken = token;
+        user.resetTokenExpires = expires;
+        await this.userRepository.save(user);
+    }
+
+    // Buscar por token y validar expiración
+    async findByResetToken(token: string): Promise<User> {
+        const user = await this.userRepository.findOne({
+            where: { resetToken: token },
+        });
+        if (
+            !user ||
+            !user.resetTokenExpires ||
+            user.resetTokenExpires < new Date()
+        ) {
+            throw new NotFoundException("Token inválido o expirado");
+        }
+        return user;
+    }
+
+    // Hash y actualizar password + limpiar token
+    async updatePassword(userId: string, newPassword: string): Promise<void> {
+        const user = await this.userRepository.findOne({ where: { id: userId } });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
+        user.password = await bcrypt.hash(newPassword, 10);
+        user.resetToken = null;
+        user.resetTokenExpires = null;
+        await this.userRepository.save(user);
+    }
 }

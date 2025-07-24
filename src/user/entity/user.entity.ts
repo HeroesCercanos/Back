@@ -54,4 +54,10 @@ export class User {
 
     @OneToMany(() => Incident, (incident) => incident.user)
     incidents: Incident[];
+
+    @Column({ type: "text", nullable: true })
+    resetToken: string | null;
+
+    @Column({ type: "timestamp", nullable: true })
+    resetTokenExpires: Date | null;
 }
