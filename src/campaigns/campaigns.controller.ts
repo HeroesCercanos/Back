@@ -9,6 +9,7 @@ import {
     UseGuards,
     Patch,
     Req,
+    HttpCode,
 } from "@nestjs/common";
 import { CampaignService } from "./campaigns.service";
 import { CreateCampaignDto } from "./dto/create-campaign.dto";
@@ -17,7 +18,6 @@ import { RolesGuard } from "src/auth/guards/google-auth/roles.guard";
 import { Role } from "src/user/role.enum";
 import { Roles } from "src/auth/decorator/roles.decorator";
 import { UpdateCampaignDto } from "./dto/update-campaign.dto";
-
 
 @Controller("campaigns")
 export class CampaignController {
@@ -52,12 +52,22 @@ export class CampaignController {
     @Roles(Role.ADMIN)
     @Patch(":id")
     edit(@Param("id") id: string, @Body() dto: UpdateCampaignDto) {
-        return this.service.update(id, dto);    }
+        return this.service.update(id, dto);
+    }
 
     @UseGuards(AuthGuard("jwt"), RolesGuard)
     @Roles(Role.ADMIN)
     @Patch(":id/finish")
     finish(@Param("id") id: string) {
         return this.service.finish(id);
+    }
+
+    @UseGuards(AuthGuard("jwt"), RolesGuard)
+    @Roles(Role.ADMIN)
+    @HttpCode(204)
+    @Patch(":id/reactivate")
+    reactivate(@Param("id") id: string) {
+        const updated = this.service.reactivateCampaign(id);
+        if (!updated) throw new Error(`Campaign ${id} not found`);
     }
 }

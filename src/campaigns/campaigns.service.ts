@@ -63,6 +63,14 @@ export class CampaignService {
         return this.update(id, { isActive: false });
     }
 
+    async reactivateCampaign(id: string): Promise<Campaign> {
+        if (!id) {
+            throw new NotFoundException(`Campaign ${id} no encontrada`);
+        }
+
+        return this.update(id, { isActive: true });
+    }
+
     /** Marca como finalizada todas las campañas activas cuya endDate ya pasó */
     private async markExpiredCampaigns(): Promise<void> {
         await this.repo
