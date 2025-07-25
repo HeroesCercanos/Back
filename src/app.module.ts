@@ -18,7 +18,6 @@ import { MailModule } from "./mail/mail.module";
 import { DonationModule } from "./donations/donations.module";
 import { CampaignModule } from "./campaigns/campaigns.module";
 import { WebhookController } from "./webhook/webhook.controller";
-import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
     imports: [
@@ -58,7 +57,7 @@ import { WebhookModule } from './webhook/webhook.module';
 
         CampaignModule,
 
-        WebhookModule,
+        
     ],
     controllers: [AppController, CloudinaryController, WebhookController],
     providers: [AppService, MatchConstraint, CloudinaryService, MailService],
