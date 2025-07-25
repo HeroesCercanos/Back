@@ -150,7 +150,8 @@ export class DonationService {
     }
 
     async findByPreferenceId(prefId: string): Promise<Donation | null> {
-        return this.donationRepo.findOne({ where: { preferenceId: prefId } });
+        return this.donationRepo.findOne({ where: { preferenceId: prefId }, relations: ['user'] });
+        
     }
 
     async markAsCompleted(id: string): Promise<void> {
