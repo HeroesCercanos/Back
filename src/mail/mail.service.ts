@@ -7,7 +7,6 @@ import { DonationEmailDto } from "./dto/donation-email.dto";
 import { IncidentEmailDto } from "./dto/incident-email.dto";
 import { ResetPasswordEmailDto } from "./dto/reset-password-email.dto";
 
-
 @Injectable()
 export class MailService {
     private transporter;
@@ -71,11 +70,16 @@ export class MailService {
 
         this.logger.log(`Registration email sent: ${info.messageId}`);
     }
-
     async sendDonationEmail(dto: DonationEmailDto) {
         const { name, email, amount } = dto;
+        this.logger.log(
+            `sendDonationEmail() invocado para donación de ${name} <${email}> monto $${amount}`,
+        );
 
         try {
+            // ================================================
+            // 1) Mail al admin
+            // ================================================
             const adminMail = await this.transporter.sendMail({
                 from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
                 to: this.config.get("ADMIN_EMAIL"),
@@ -105,7 +109,11 @@ export class MailService {
   </div>
 `,
             });
+            this.logger.log(`SMTP aceptó adminMail id=${adminMail.messageId}`);
 
+            // ================================================
+            // 2) Mail al usuario
+            // ================================================
             const userMail = await this.transporter.sendMail({
                 from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
                 to: email,
@@ -137,18 +145,15 @@ export class MailService {
   </div>
 `,
             });
-
-            this.logger.log(
-                `Donation email sent to admin: ${adminMail.messageId}`,
-            );
-            this.logger.log(
-                `Donation email sent to user: ${userMail.messageId}`,
-            );
+            this.logger.log(`SMTP aceptó userMail id=${userMail.messageId}`);
 
             return { admin: adminMail, user: userMail };
-        } catch (error) {
-            console.error("Error interno en sendDonationEmail:", error);
-            throw error;
+        } catch (err: any) {
+            this.logger.error(
+                `Error interno en sendDonationEmail: ${err.message}`,
+                err.stack,
+            );
+            throw err;
         }
     }
 
