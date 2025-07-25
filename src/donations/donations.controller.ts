@@ -51,11 +51,11 @@ export class DonationController {
     async createPreference(
         @Body() dto: CreateDonationDto,
         @CurrentUser() user: User,
-    ): Promise<{ donationId: string; checkoutUrl: string }> {
-        const { donation, checkoutUrl } = await this.donationService.create(
+    ): Promise<{ donationId: string; checkoutUrl: string, preferenceId: string }> {
+        const { donation, checkoutUrl, preferenceId } = await this.donationService.create(
             dto,
             user,
         );
-        return { donationId: donation.id, checkoutUrl };
+        return { donationId: donation.id, preferenceId, checkoutUrl };
     }
 }

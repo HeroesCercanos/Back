@@ -104,7 +104,11 @@ export class DonationService {
     async create(
         dto: CreateDonationDto,
         user: User,
-    ): Promise<{ donation: Donation; checkoutUrl: string }> {
+    ): Promise<{
+        donation: Donation;
+        checkoutUrl: string;
+        preferenceId: string;
+    }> {
         // 1) Crear preferencia
         const pref = await this.preferenceClient.create({
             body: {
@@ -136,6 +140,10 @@ export class DonationService {
             );
         }
 
+        if (!preferenceId) {
+            throw new Error("No se recibió preference_id de MercadoPago");
+        }
+
         // 3) Guardar en BD en estado "pending"
         const donation = this.donationRepo.create({
             user,
@@ -146,12 +154,14 @@ export class DonationService {
         });
         await this.donationRepo.save(donation);
 
-        return { donation, checkoutUrl };
+        return { donation, checkoutUrl, preferenceId };
     }
 
     async findByPreferenceId(prefId: string): Promise<Donation | null> {
-        return this.donationRepo.findOne({ where: { preferenceId: prefId }, relations: ['user'] });
-        
+        return this.donationRepo.findOne({
+            where: { preferenceId: prefId },
+            relations: ["user"],
+        });
     }
 
     async markAsCompleted(id: string): Promise<void> {
