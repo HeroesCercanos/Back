@@ -1,16 +1,44 @@
+// src/migrations/1753381970011-addColumnsUser.ts
 import { MigrationInterface, QueryRunner } from "typeorm";
 
 export class AddColumnsUser1753381970011 implements MigrationInterface {
-    name = 'AddColumnsUser1753381970011'
-
     public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "user" ADD "resetToken" text`);
-        await queryRunner.query(`ALTER TABLE "user" ADD "resetTokenExpires" TIMESTAMP`);
+        await queryRunner.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'user'
+            AND column_name = 'resetToken'
+        ) THEN
+          ALTER TABLE "user" ADD COLUMN "resetToken" text;
+        END IF;
+      END$$;
+    `);
+
+        await queryRunner.query(`
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'user'
+            AND column_name = 'resetTokenExpires'
+        ) THEN
+          ALTER TABLE "user" ADD COLUMN "resetTokenExpires" bigint;
+        END IF;
+      END$$;
+    `);
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`ALTER TABLE "user" DROP COLUMN "resetTokenExpires"`);
-        await queryRunner.query(`ALTER TABLE "user" DROP COLUMN "resetToken"`);
+        // opcionalmente podés dejar DROP IF EXISTS aquí
+        await queryRunner.query(`
+      ALTER TABLE "user" DROP COLUMN IF EXISTS "resetToken";
+    `);
+        await queryRunner.query(`
+      ALTER TABLE "user" DROP COLUMN IF EXISTS "resetTokenExpires";
+    `);
     }
-
 }
