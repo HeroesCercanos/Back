@@ -17,6 +17,8 @@ import { MailService } from "./mail/mail.service";
 import { MailModule } from "./mail/mail.module";
 import { DonationModule } from "./donations/donations.module";
 import { CampaignModule } from "./campaigns/campaigns.module";
+import { WebhookController } from "./webhook/webhook.controller";
+import { WebhookModule } from './webhook/webhook.module';
 
 @Module({
     imports: [
@@ -55,8 +57,10 @@ import { CampaignModule } from "./campaigns/campaigns.module";
         DonationModule,
 
         CampaignModule,
+
+        WebhookModule,
     ],
-    controllers: [AppController, CloudinaryController],
+    controllers: [AppController, CloudinaryController, WebhookController],
     providers: [AppService, MatchConstraint, CloudinaryService, MailService],
 })
 export class AppModule {}
