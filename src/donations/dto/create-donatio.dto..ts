@@ -1,11 +1,12 @@
 // src/donation/dto/create-donation.dto.ts
-import { IsNumber, IsString, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Min } from "class-validator";
 
 export class CreateDonationDto {
-  @IsNumber()
-  @Min(0.01)
-  amount: number;
+    @IsNumber()
+    @Min(0.01)
+    amount: number;
 
-  @IsString()
-  description: string;
+    @IsString()
+    @IsOptional()
+    description?: string;
 }
