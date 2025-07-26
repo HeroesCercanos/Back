@@ -6,6 +6,7 @@ import { Donation } from "./entity/donation.entity";
 import { CreateDonationDto } from "./dto/create-donatio.dto.";
 import { User } from "../user/entity/user.entity";
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import { ConfigService } from "@nestjs/config";
 
 @Injectable()
 export class DonationService {
@@ -14,12 +15,12 @@ export class DonationService {
     constructor(
         @InjectRepository(Donation)
         private readonly donationRepo: Repository<Donation>,
+        private readonly config: ConfigService, 
     ) {
         // 1. Inicializa MercadoPagoConfig con tu Access Token
         // Es crucial usar una variable de entorno para el accessToken en producción.
         this.client = new MercadoPagoConfig({
-            accessToken:
-                "APP_USR-1094579508369836-072109-eb42a568ae4d52e37fd94375d048accc-2574775518",
+            accessToken: this.config.get<string>("MERCADOPAGO_ACCESS_TOKEN")!,
         });
 
         // 2. Ahora, inicializa el cliente de preferencias pasando la configuración
@@ -127,6 +128,9 @@ export class DonationService {
                     failure: process.env.MP_BACK_URL_FAILURE!,
                 },
                 auto_return: "approved",
+                notification_url: this.config.get<string>(
+                    "MP_NOTIFICATION_URL",
+                ),
             },
         });
 
