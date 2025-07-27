@@ -5,7 +5,7 @@ import * as nodemailer from "nodemailer";
 import { RegistrationEmailDto } from "./dto/registration-email.dto";
 import { DonationEmailDto } from "./dto/donation-email.dto";
 import { IncidentEmailDto } from "./dto/incident-email.dto";
-import { ResetPasswordEmailDto } from "./dto/reset-password-email.dto";
+import { ResetPasswordEmailDto } from "../auth/dto/reset-password-email.dto";
 
 @Injectable()
 export class MailService {
@@ -242,14 +242,14 @@ export class MailService {
      * @param dto.email destino
      * @param dto.token token de recuperación
      */
-    async sendResetPassword(dto: ResetPasswordEmailDto) {
+    async sendResetPassword(dto: ResetPasswordEmailDto): Promise<void> {
         const { email, token } = dto;
         const frontendUrl = this.config.get<string>("FRONTEND_URL");
-        const link = `${frontendUrl}/reset-password?token=${token}`;
+        const link = `${frontendUrl}/reset-password/${token}`;
 
         const info = await this.transporter.sendMail({
             from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
-            to: email,
+            to: email, // email ya existe en ResetPasswordEmailDto
             subject: "🔐 Recuperación de contraseña",
             html: `
 <div style="font-family: Arial, sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">

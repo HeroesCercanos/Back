@@ -1,8 +1,10 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Get,
     HttpCode,
+    HttpStatus,
     Post,
     Req,
     Res,
@@ -15,6 +17,9 @@ import { CreateUserDto } from "./dto/create-user.dto";
 import { Request, Response } from "express";
 import { GoogleAuthGuard } from "./guards/google-auth/google-auth.guard";
 import { UserService } from "src/user/user.service";
+import { ResetPasswordEmailDto } from "./dto/reset-password-email.dto";
+import { ForgotPasswordDto } from "./dto/forgot-password.dto";
+import { ResetPasswordDto } from "./dto/reset-password.dto";
 
 @Controller("auth")
 export class AuthController {
@@ -58,38 +63,27 @@ export class AuthController {
 
     // Paso A: el usuario ingresa su email
     @Post("forgot-password")
-    forgot(@Body("email") email: string) {
-        return this.authService.forgotPassword(email);
+    @HttpCode(HttpStatus.OK)
+    async forgotPassword(@Body() dto: ForgotPasswordDto) {
+        await this.authService.sendResetPasswordEmail(dto);
+        return {
+            message:
+                "Si el correo está registrado, recibirás un email con instrucciones.",
+        };
     }
 
     // Paso B: el usuario envía token + nueva contraseña
     @Post("reset-password")
-    reset(
-        @Body("token") token: string,
-        @Body("newPassword") newPassword: string,
-    ) {
-        return this.authService.resetPassword(token, newPassword);
+    @HttpCode(HttpStatus.OK)
+    async resetPassword(@Body() dto: ResetPasswordDto) {
+        const { newPassword, confirmPassword } = dto;
+        if (newPassword !== confirmPassword) {
+            throw new BadRequestException("Las contraseñas no coinciden.");
+        }
+
+        await this.authService.resetPassword(dto);
+        return { message: "Tu contraseña ha sido actualizada correctamente." };
     }
-
-    // auth.controller.ts
-
-    /* @Get("google/callback")
-    @UseGuards(GoogleAuthGuard)
-    async googleCallback(
-        @Req() req: Request & { user: any },
-        @Res() res: Response,
-    ) {
-        const user = req.user as any;
-        const { access_token } = await this.authService.validateGoogleLogin({
-            googleId: user.googleId,
-            email: user.email,
-            name: user.name,
-            picture: user.picture,
-        });
-
-        res.redirect(`${process.env.FRONTEND_URL}?token=${access_token}`);
-        return { access_token, user };
-    }*/
 
     //cookies
     @Post("signin")
@@ -118,39 +112,6 @@ export class AuthController {
 
         return { message: "Login exitoso" };
     }
-
-    /* @Post("signin")
-    async signIn(@Body() dto: LoginUserDto) {
-        return this.authService.signIn(dto.email, dto.password);
-    } */
-
-    //cookies
-    /*  @Post("signup")
-    @HttpCode(201)
-    async signUp(
-        @Body() dto: CreateUserDto,
-        @Res({ passthrough: true }) res: Response,
-    ) {
-        
-        // idem: limpio antes de crear usuario
-        res.clearCookie("jwtToken", { path: "/" });
-        const { access_token } = await this.authService.signUp(dto);
-
-        res.cookie("jwtToken", access_token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-            path: "/",
-            maxAge: 24 * 60 * 60 * 1000,
-        });
-
-        return { message: "Registro exitoso y sesión iniciada" };
-    }
- */
-    /* @Post("signup")
-    async signUp(@Body() dto: CreateUserDto) {
-        return this.authService.signUp(dto);
-    }  */
 
     @Post("signup")
     @HttpCode(201)
@@ -185,3 +146,36 @@ export class AuthController {
         return { message: "Logout exitoso" };
     }
 }
+
+/* @Post("signin")
+    async signIn(@Body() dto: LoginUserDto) {
+        return this.authService.signIn(dto.email, dto.password);
+    } */
+
+//cookies
+/*  @Post("signup")
+    @HttpCode(201)
+    async signUp(
+        @Body() dto: CreateUserDto,
+        @Res({ passthrough: true }) res: Response,
+    ) {
+        
+        // idem: limpio antes de crear usuario
+        res.clearCookie("jwtToken", { path: "/" });
+        const { access_token } = await this.authService.signUp(dto);
+
+        res.cookie("jwtToken", access_token, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+            path: "/",
+            maxAge: 24 * 60 * 60 * 1000,
+        });
+
+        return { message: "Registro exitoso y sesión iniciada" };
+    }
+ */
+/* @Post("signup")
+    async signUp(@Body() dto: CreateUserDto) {
+        return this.authService.signUp(dto);
+    }  */

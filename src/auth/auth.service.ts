@@ -13,13 +13,16 @@ import { User } from "src/user/entity/user.entity";
 import { Role } from "src/user/role.enum";
 import * as crypto from "crypto";
 import { MailService } from "src/mail/mail.service";
+import { ForgotPasswordDto } from "./dto/forgot-password.dto";
+import { ResetPasswordEmailDto } from "./dto/reset-password-email.dto";
+import { ResetPasswordDto } from "./dto/reset-password.dto";
 
 @Injectable()
 export class AuthService {
     constructor(
         private readonly usersService: UserService,
         private readonly jwtService: JwtService,
-        private readonly mailService: MailService
+        private readonly mailService: MailService,
     ) {}
 
     /** Valida credenciales y firma JWT */
@@ -170,28 +173,43 @@ export class AuthService {
     }
 
     // 1) Solicitar recuperación
-    async forgotPassword(email: string): Promise<void> {
-        // 1) Intento de buscar usuario
+    async sendResetPasswordEmail(dto: ForgotPasswordDto): Promise<void> {
+        const { email } = dto;
         const user = await this.usersService.findByEmail(email);
-        // 2) Null check para TS y seguridad
         if (!user) {
-            throw new NotFoundException("Usuario no encontrado");
+            // No revelamos si existe o no
+            return;
         }
 
-        // 3) Generación de token y expiración
-        const token = crypto.randomBytes(32).toString("hex");
-        const expires = new Date(Date.now() + 60 * 60 * 1000); // 1 hora
+        // Generar token + expiración
+        const token = crypto.randomUUID();
+        const expires = new Date(Date.now() + 3600 * 1000); // +1h
 
-        // 4) Guardado del token
         await this.usersService.saveResetToken(user.id, token, expires);
 
-        // 5) Envío del email (usando tu MailService)
-        await this.mailService.sendResetPassword({ email, token });
+        // Instancio el DTO de mail para que TS acepte email + token
+        const mailDto = new ResetPasswordEmailDto();
+        mailDto.email = email;
+        mailDto.token = token;
+
+        await this.mailService.sendResetPassword(mailDto);
     }
 
-    // 2) Resetear contraseña con token
-    async resetPassword(token: string, newPassword: string): Promise<void> {
+    /**
+     * 2️⃣ Valida token y actualiza la contraseña.
+     */
+    async resetPassword(dto: ResetPasswordDto): Promise<void> {
+        const { token, newPassword, confirmPassword } = dto;
+
+        if (newPassword !== confirmPassword) {
+            throw new BadRequestException("Las contraseñas no coinciden.");
+        }
+
         const user = await this.usersService.findByResetToken(token);
+        if (!user) {
+            throw new NotFoundException("Token inválido o expirado.");
+        }
+
         await this.usersService.updatePassword(user.id, newPassword);
     }
 }
