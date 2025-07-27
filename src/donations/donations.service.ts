@@ -15,7 +15,7 @@ export class DonationService {
     constructor(
         @InjectRepository(Donation)
         private readonly donationRepo: Repository<Donation>,
-        private readonly config: ConfigService, 
+        private readonly config: ConfigService,
     ) {
         // 1. Inicializa MercadoPagoConfig con tu Access Token
         // Es crucial usar una variable de entorno para el accessToken en producción.
@@ -69,9 +69,8 @@ export class DonationService {
         }));
     }
 
- 
     // src/donation/donation.service.ts
-    async create(
+    /* async create(
         dto: CreateDonationDto,
         user: User,
     ): Promise<{
@@ -128,11 +127,89 @@ export class DonationService {
         await this.donationRepo.save(donation);
 
         return { donation, checkoutUrl, preferenceId };
+    } */
+
+    /** Crea una donación para un usuario */
+    async create(
+        dto: CreateDonationDto,
+        user: User,
+    ): Promise<{
+        donation: Donation;
+        checkoutUrl: string;
+        preferenceId: string;
+    }> {
+        // 1) Guardar la donación en la BD en estado "pending"
+        //    Primero la creamos para obtener su 'id'
+        const donation = this.donationRepo.create({
+            user,
+            amount: dto.amount,
+            description: dto.description ?? "",
+            status: "pending", // Inicialmente en pending, sin preferenceId aún
+        });
+        await this.donationRepo.save(donation); // Guarda para obtener el ID de la donación
+
+        // 2) Crear preferencia en Mercado Pago
+        const pref = await this.preferenceClient.create({
+            body: {
+                items: [
+                    {
+                        // Usamos un ID de ítem único, puede ser el mismo ID de la donación o un timestamp
+                        id: `don-${donation.id}`,
+                        title: `Donación de ${user.name}`,
+                        quantity: 1,
+                        unit_price: dto.amount,
+                        currency_id: "ARS",
+                    },
+                ],
+                back_urls: {
+                    success: process.env.MP_BACK_URL_SUCCESS!,
+                    pending: process.env.MP_BACK_URL_PENDING!,
+                    failure: process.env.MP_BACK_URL_FAILURE!,
+                },
+                auto_return: "approved",
+                notification_url: this.config.get<string>(
+                    "MP_NOTIFICATION_URL",
+                ),
+                // ¡IMPORTANTE! Añadimos external_reference con el ID de tu donación
+                external_reference: donation.id,
+            },
+        });
+
+        // 3) Extraer y validar URLs y preferenceId
+        const checkoutUrl = pref.init_point!;
+        const preferenceId = pref.id;
+
+        if (!checkoutUrl) {
+            throw new BadRequestException(
+                "No llegó el URL de pago de MercadoPago",
+            );
+        }
+
+        if (!preferenceId) {
+            throw new Error("No se recibió preference_id de MercadoPago");
+        }
+
+        // 4) Actualizar la donación en la BD con el preferenceId de Mercado Pago
+        //    (Ya tiene el ID, amount, description, user, y status "pending")
+        await this.donationRepo.update(donation.id, { preferenceId });
+
+        return { donation, checkoutUrl, preferenceId };
     }
+
+    // ... (El resto de tus métodos: findByUser, totalDonations, monthlyDonations, markAsCompleted) ...
+
+    /** Busca una donación por su preferenceId (se mantiene por si acaso, aunque external_reference es mejor para webhooks) */
 
     async findByPreferenceId(prefId: string): Promise<Donation | null> {
         return this.donationRepo.findOne({
             where: { preferenceId: prefId },
+            relations: ["user"],
+        });
+    }
+
+    async findByExternalReference(extRef: string): Promise<Donation | null> {
+        return this.donationRepo.findOne({
+            where: { id: extRef }, // Asumimos que external_reference es el ID de tu donación
             relations: ["user"],
         });
     }
@@ -142,10 +219,8 @@ export class DonationService {
     }
 }
 
-
-
-   // 🎯 Crear preferencia para MercadoPago
-    /* async createPreference(amount: number, description: string) {
+// 🎯 Crear preferencia para MercadoPago
+/* async createPreference(amount: number, description: string) {
         try {
             const result = await this.preferenceClient.create({ // ¡Usamos this.preferenceClient!
                 body: { // La preferencia se crea con un 'body' que contiene los items y back_urls
