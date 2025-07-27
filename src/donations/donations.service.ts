@@ -69,38 +69,7 @@ export class DonationService {
         }));
     }
 
-    // 🎯 Crear preferencia para MercadoPago
-    /* async createPreference(amount: number, description: string) {
-        try {
-            const result = await this.preferenceClient.create({ // ¡Usamos this.preferenceClient!
-                body: { // La preferencia se crea con un 'body' que contiene los items y back_urls
-                    items: [
-                        {
-                            id: 'item-id-1234',
-                            title: description,
-                            quantity: 1,
-                            unit_price: amount,
-                            currency_id: 'ARS',
-                        },
-                    ],
-                    back_urls: {
-                        success: 'https://heroes-cercanos-front.onrender.com/success',
-                        failure: 'https://heroes-cercanos-front.onrender.com/failure',
-                        pending: 'https://heroes-cercanos-front.onrender.com/pending',
-                    },
-                    auto_return: 'approved',
-                }
-            });
-
-            // El resultado de create devuelve el cuerpo de la preferencia en .body
-            return { id: result.id }; // Ahora el ID está directamente en result.id
-        } catch (error) {
-            console.error('Error al crear preferencia de Mercado Pago:', error);
-            // Puedes lanzar una excepción de NestJS si quieres manejar errores en el controlador
-            throw new Error('Error al crear preferencia de pago en Mercado Pago');
-        }
-    } */
-
+ 
     // src/donation/donation.service.ts
     async create(
         dto: CreateDonationDto,
@@ -172,3 +141,37 @@ export class DonationService {
         await this.donationRepo.update(id, { status: "completed" });
     }
 }
+
+
+
+   // 🎯 Crear preferencia para MercadoPago
+    /* async createPreference(amount: number, description: string) {
+        try {
+            const result = await this.preferenceClient.create({ // ¡Usamos this.preferenceClient!
+                body: { // La preferencia se crea con un 'body' que contiene los items y back_urls
+                    items: [
+                        {
+                            id: 'item-id-1234',
+                            title: description,
+                            quantity: 1,
+                            unit_price: amount,
+                            currency_id: 'ARS',
+                        },
+                    ],
+                    back_urls: {
+                        success: 'https://heroes-cercanos-front.onrender.com/success',
+                        failure: 'https://heroes-cercanos-front.onrender.com/failure',
+                        pending: 'https://heroes-cercanos-front.onrender.com/pending',
+                    },
+                    auto_return: 'approved',
+                }
+            });
+
+            // El resultado de create devuelve el cuerpo de la preferencia en .body
+            return { id: result.id }; // Ahora el ID está directamente en result.id
+        } catch (error) {
+            console.error('Error al crear preferencia de Mercado Pago:', error);
+            // Puedes lanzar una excepción de NestJS si quieres manejar errores en el controlador
+            throw new Error('Error al crear preferencia de pago en Mercado Pago');
+        }
+    } */
