@@ -6,5 +6,9 @@ export class UploadMediaDto {
 
     @IsOptional()
     @IsString()
-    caption?: string;
+    title?: string;
+
+    @IsOptional()
+    @IsString()
+    caption?: string;
 }
