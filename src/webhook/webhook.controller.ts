@@ -2,22 +2,20 @@
 import { Controller, Post, Req, HttpCode, Logger } from "@nestjs/common";
 import { DonationService } from "src/donations/donations.service";
 import { MailService } from "src/mail/mail.service";
-import { MercadoPagoConfig, Payment } from "mercadopago"; // Importar Payment y MercadoPagoConfig
-import { ConfigService } from "@nestjs/config";
+import { MercadoPagoConfig, Payment } from "mercadopago";
+import { ConfigService } from "@nestjs/config"; // Asegúrate de importar ConfigService
 
 @Controller("webhooks/mercadopago")
 export class WebhookController {
     private readonly logger = new Logger(WebhookController.name);
-    private client: MercadoPagoConfig; // Para el cliente de Mercado Pago
-    private paymentClient: Payment; // Para consultar pagos
+    private client: MercadoPagoConfig;
+    private paymentClient: Payment;
 
     constructor(
         private readonly donationService: DonationService,
         private readonly mailService: MailService,
-        // Inyectar ConfigService para obtener el Access Token
-        private readonly config: ConfigService,
+        private readonly config: ConfigService, // Asegúrate de que esté inyectado
     ) {
-        // Inicializar el cliente de Mercado Pago aquí también
         this.client = new MercadoPagoConfig({
             accessToken: this.config.get<string>("MERCADOPAGO_ACCESS_TOKEN")!,
         });
@@ -30,11 +28,13 @@ export class WebhookController {
         const body = req.body;
         this.logger.log(`Webhook recibido: ${JSON.stringify(body)}`);
 
-        // La notificación relevante para pagos es 'payment' con action 'payment.updated'
-        if (body.type === "payment" && body.action === "payment.updated") {
-            const paymentId = body.data.id as string; // Esto es el ID del pago, no el preference_id
+        // Solo nos interesa el tipo 'payment'
+        if (body.type === "payment") {
+            const paymentId = body.data.id as string;
             if (!paymentId) {
-                this.logger.error("Webhook de pago sin ID de pago.");
+                this.logger.error(
+                    "Webhook de pago sin ID de pago en body.data.id.",
+                );
                 return;
             }
 
@@ -43,18 +43,20 @@ export class WebhookController {
             );
 
             try {
-                // 1. Consultar el estado real del pago usando el Payment ID
+                // Consultar el estado real del pago usando el Payment ID
                 const paymentDetails = await this.paymentClient.get({
                     id: paymentId,
                 });
 
+                // Usar aserción de tipo para preference_id
+                const preferenceId = (paymentDetails as any).preference_id;
+
                 this.logger.log(
-                    `Detalles del pago ${paymentId}: Status=${paymentDetails.status}`,
+                    `Detalles del pago ${paymentId}: Status=${paymentDetails.status}, PreferenceId=${preferenceId}`,
                 );
 
                 // Solo procesar si el pago está aprobado
                 if (paymentDetails.status === "approved") {
-                    const preferenceId = (paymentDetails as any).preference_id; // Ahora sí obtenemos el preference_id del detalle del pago
                     if (!preferenceId) {
                         this.logger.error(
                             `Pago ${paymentId} aprobado, pero sin preference_id.`,
@@ -112,7 +114,8 @@ export class WebhookController {
                         `Pago ${paymentId} no aprobado (status: ${paymentDetails.status}). No se envía mail.`,
                     );
                 }
-            } catch (apiError) {
+            } catch (apiError: any) {
+                // Capturar el error con tipo any
                 this.logger.error(
                     `Error al consultar detalles del pago ${paymentId} en Mercado Pago: ${apiError.message}`,
                     apiError.stack,
@@ -120,7 +123,7 @@ export class WebhookController {
             }
         } else {
             this.logger.log(
-                `Tipo de notificación no relevante o acción incorrecta: ${body.type}`,
+                `Webhook de tipo ${body.type} no procesado por este controlador.`,
             );
         }
     }
