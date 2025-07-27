@@ -5,6 +5,7 @@ import {
     Get,
     HttpCode,
     HttpStatus,
+    NotFoundException,
     Param,
     ParseIntPipe,
     Patch,
@@ -44,8 +45,17 @@ export class UserController {
     }
 
     @Get(":id")
-    findOne(@Query("id") id: string): Promise<User> {
-        return this.userService.update(id, {} as Partial<User>);
+    async findOne(
+        @Param("id")
+        id: string,
+    ): Promise<User> {
+        const user = await this.userService.findById(id);
+
+        if (!user) {
+            throw new NotFoundException(`User with ID ${id} not found.`);
+        }
+
+        return user;
     }
 
     @Delete(":id")
