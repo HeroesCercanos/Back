@@ -27,11 +27,7 @@ export class DonationService {
         this.preferenceClient = new Preference(this.client);
     }
 
-    /** Crea una donación para un usuario */
-    /*  async create(dto: CreateDonationDto, user: User): Promise<Donation> {
-        const donation = this.donationRepo.create({ ...dto, user });
-        return this.donationRepo.save(donation);
-    } */
+   
 
     /** Historial de donaciones de un usuario */
     async findByUser(user: User): Promise<Donation[]> {
@@ -69,65 +65,6 @@ export class DonationService {
         }));
     }
 
-    // src/donation/donation.service.ts
-    /* async create(
-        dto: CreateDonationDto,
-        user: User,
-    ): Promise<{
-        donation: Donation;
-        checkoutUrl: string;
-        preferenceId: string;
-    }> {
-        // 1) Crear preferencia
-        const pref = await this.preferenceClient.create({
-            body: {
-                items: [
-                    {
-                        id: `don-${Date.now()}`,
-                        title: `Donación de ${user.name}`,
-                        quantity: 1,
-                        unit_price: dto.amount,
-                        currency_id: "ARS",
-                    },
-                ],
-                back_urls: {
-                    success: process.env.MP_BACK_URL_SUCCESS!,
-                    pending: process.env.MP_BACK_URL_PENDING!,
-                    failure: process.env.MP_BACK_URL_FAILURE!,
-                },
-                auto_return: "approved",
-                notification_url: this.config.get<string>(
-                    "MP_NOTIFICATION_URL",
-                ),
-            },
-        });
-
-        // 2) Extraer y validar
-        const checkoutUrl = pref.init_point!;
-        const preferenceId = pref.id;
-
-        if (!checkoutUrl) {
-            throw new BadRequestException(
-                "No llegó el URL de pago de MercadoPago",
-            );
-        }
-
-        if (!preferenceId) {
-            throw new Error("No se recibió preference_id de MercadoPago");
-        }
-
-        // 3) Guardar en BD en estado "pending"
-        const donation = this.donationRepo.create({
-            user,
-            amount: dto.amount,
-            description: dto.description ?? "", // ← aquí
-            preferenceId,
-            status: "pending",
-        });
-        await this.donationRepo.save(donation);
-
-        return { donation, checkoutUrl, preferenceId };
-    } */
 
     /** Crea una donación para un usuario */
     async create(
@@ -196,7 +133,6 @@ export class DonationService {
         return { donation, checkoutUrl, preferenceId };
     }
 
-    // ... (El resto de tus métodos: findByUser, totalDonations, monthlyDonations, markAsCompleted) ...
 
     /** Busca una donación por su preferenceId (se mantiene por si acaso, aunque external_reference es mejor para webhooks) */
 
@@ -218,6 +154,12 @@ export class DonationService {
         await this.donationRepo.update(id, { status: "completed" });
     }
 }
+
+ /** Crea una donación para un usuario */
+    /*  async create(dto: CreateDonationDto, user: User): Promise<Donation> {
+        const donation = this.donationRepo.create({ ...dto, user });
+        return this.donationRepo.save(donation);
+    } */
 
 // 🎯 Crear preferencia para MercadoPago
 /* async createPreference(amount: number, description: string) {
@@ -249,4 +191,65 @@ export class DonationService {
             // Puedes lanzar una excepción de NestJS si quieres manejar errores en el controlador
             throw new Error('Error al crear preferencia de pago en Mercado Pago');
         }
+    } */
+
+        
+    // src/donation/donation.service.ts
+    /* async create(
+        dto: CreateDonationDto,
+        user: User,
+    ): Promise<{
+        donation: Donation;
+        checkoutUrl: string;
+        preferenceId: string;
+    }> {
+        // 1) Crear preferencia
+        const pref = await this.preferenceClient.create({
+            body: {
+                items: [
+                    {
+                        id: `don-${Date.now()}`,
+                        title: `Donación de ${user.name}`,
+                        quantity: 1,
+                        unit_price: dto.amount,
+                        currency_id: "ARS",
+                    },
+                ],
+                back_urls: {
+                    success: process.env.MP_BACK_URL_SUCCESS!,
+                    pending: process.env.MP_BACK_URL_PENDING!,
+                    failure: process.env.MP_BACK_URL_FAILURE!,
+                },
+                auto_return: "approved",
+                notification_url: this.config.get<string>(
+                    "MP_NOTIFICATION_URL",
+                ),
+            },
+        });
+
+        // 2) Extraer y validar
+        const checkoutUrl = pref.init_point!;
+        const preferenceId = pref.id;
+
+        if (!checkoutUrl) {
+            throw new BadRequestException(
+                "No llegó el URL de pago de MercadoPago",
+            );
+        }
+
+        if (!preferenceId) {
+            throw new Error("No se recibió preference_id de MercadoPago");
+        }
+
+        // 3) Guardar en BD en estado "pending"
+        const donation = this.donationRepo.create({
+            user,
+            amount: dto.amount,
+            description: dto.description ?? "", // ← aquí
+            preferenceId,
+            status: "pending",
+        });
+        await this.donationRepo.save(donation);
+
+        return { donation, checkoutUrl, preferenceId };
     } */
