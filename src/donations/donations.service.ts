@@ -1,5 +1,5 @@
 // src/donation/donation.service.ts
-import { BadRequestException, Injectable } from "@nestjs/common";
+import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository, SelectQueryBuilder } from "typeorm";
 import { Donation } from "./entity/donation.entity";
@@ -11,6 +11,7 @@ import { ConfigService } from "@nestjs/config";
 @Injectable()
 export class DonationService {
     private client: MercadoPagoConfig;
+    private readonly logger = new Logger(DonationService.name);
     private preferenceClient: Preference;
     constructor(
         @InjectRepository(Donation)
@@ -27,8 +28,6 @@ export class DonationService {
         this.preferenceClient = new Preference(this.client);
     }
 
-   
-
     /** Historial de donaciones de un usuario */
     async findByUser(user: User): Promise<Donation[]> {
         return this.donationRepo.find({
@@ -42,11 +41,29 @@ export class DonationService {
         const result = await this.donationRepo
             .createQueryBuilder("donation")
             .select("SUM(donation.amount)", "sum")
+            .where("donation.status = :status", { status: "completed" }) // Solo suma donaciones completadas
             .getRawOne<{ sum: string }>();
 
-        // result puede ser undefined, así que lo chequeamos:
         const sumStr = result?.sum ?? "0";
         return parseFloat(sumStr);
+    }
+
+    async getAllMonthlyDonations(): Promise<
+        { month: string; total: number }[]
+    > {
+        const qb = this.donationRepo
+            .createQueryBuilder("donation")
+            .select("TO_CHAR(donation.createdAt, 'YYYY-MM')", "month")
+            .addSelect("SUM(donation.amount)", "total")
+            .where("donation.status = :status", { status: "completed" }) // Solo donaciones completadas
+            .groupBy("month")
+            .orderBy("month", "ASC");
+
+        const rows = await qb.getRawMany<{ month: string; total: string }>();
+        return rows.map((r) => ({
+            month: r.month,
+            total: parseFloat(r.total),
+        }));
     }
 
     /** Historial mensual: [{ month: '2025-07', total: 123.45 }, …] */
@@ -65,6 +82,97 @@ export class DonationService {
         }));
     }
 
+    async getWeeklyDonationsLast7Days(): Promise<
+        { date: string; total: number; count: number }[]
+    > {
+        const result = await this.donationRepo
+            .createQueryBuilder("donation")
+            .select("TO_CHAR(donation.createdAt, 'YYYY-MM-DD')", "date")
+            .addSelect("SUM(donation.amount)", "total")
+            .addSelect("COUNT(donation.id)", "count")
+            .where("donation.createdAt >= NOW() - INTERVAL '7 days'")
+            .andWhere("donation.status = :status", { status: "completed" })
+            .groupBy("date")
+            .orderBy("date", "ASC")
+            .getRawMany<{ date: string; total: string; count: string }>();
+
+        const today = new Date();
+        const datesMap = new Map<string, { total: number; count: number }>();
+        result.forEach((row) =>
+            datesMap.set(row.date, {
+                total: parseFloat(row.total),
+                count: parseInt(row.count),
+            }),
+        );
+
+        const last7DaysData: { date: string; total: number; count: number }[] =
+            [];
+
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(today);
+            date.setDate(today.getDate() - i);
+            const formattedDate = date.toISOString().split("T")[0];
+            const data = datesMap.get(formattedDate) || { total: 0, count: 0 };
+            last7DaysData.push({
+                date: formattedDate,
+                total: data.total,
+                count: data.count,
+            });
+        }
+        return last7DaysData;
+    }
+
+    async getMonthlyDonationsLastNMonths(
+        nMonths: number = 6,
+    ): Promise<{ month: string; total: number; count: number }[]> {
+        if (nMonths <= 0) {
+            this.logger.warn(
+                `Valor de 'nMonths' inválido: ${nMonths}. Usando 6 por defecto.`,
+            ); // <-- USO DEL LOGGER
+            nMonths = 6;
+        }
+
+        const result = await this.donationRepo
+            .createQueryBuilder("donation")
+            .select("TO_CHAR(donation.createdAt, 'YYYY-MM')", "month")
+            .addSelect("SUM(donation.amount)", "total")
+            .addSelect("COUNT(donation.id)", "count")
+            .where(`donation.createdAt >= NOW() - INTERVAL '${nMonths} months'`)
+            .andWhere("donation.status = :status", { status: "completed" })
+            .groupBy("month")
+            .orderBy("month", "ASC")
+            .getRawMany<{ month: string; total: string; count: string }>();
+
+        const today = new Date();
+        const monthsMap = new Map<string, { total: number; count: number }>();
+        result.forEach((row) =>
+            monthsMap.set(row.month, {
+                total: parseFloat(row.total),
+                count: parseInt(row.count),
+            }),
+        );
+
+        const lastNMonthsData: {
+            month: string;
+            total: number;
+            count: number;
+        }[] = [];
+
+        for (let i = nMonths - 1; i >= 0; i--) {
+            const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            const formattedMonth = date.toISOString().substring(0, 7);
+            const data = monthsMap.get(formattedMonth) || {
+                total: 0,
+                count: 0,
+            };
+            lastNMonthsData.push({
+                month: formattedMonth,
+                total: data.total,
+                count: data.count,
+            });
+        }
+        return lastNMonthsData;
+    }
 
     /** Crea una donación para un usuario */
     async create(
@@ -133,7 +241,6 @@ export class DonationService {
         return { donation, checkoutUrl, preferenceId };
     }
 
-
     /** Busca una donación por su preferenceId (se mantiene por si acaso, aunque external_reference es mejor para webhooks) */
 
     async findByPreferenceId(prefId: string): Promise<Donation | null> {
@@ -155,8 +262,8 @@ export class DonationService {
     }
 }
 
- /** Crea una donación para un usuario */
-    /*  async create(dto: CreateDonationDto, user: User): Promise<Donation> {
+/** Crea una donación para un usuario */
+/*  async create(dto: CreateDonationDto, user: User): Promise<Donation> {
         const donation = this.donationRepo.create({ ...dto, user });
         return this.donationRepo.save(donation);
     } */
@@ -193,9 +300,8 @@ export class DonationService {
         }
     } */
 
-        
-    // src/donation/donation.service.ts
-    /* async create(
+// src/donation/donation.service.ts
+/* async create(
         dto: CreateDonationDto,
         user: User,
     ): Promise<{
