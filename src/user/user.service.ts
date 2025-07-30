@@ -3,6 +3,7 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { User } from "./entity/user.entity"; // ajustá ruta si necesario
 import * as bcrypt from "bcrypt";
+import { Role } from "./role.enum";
 
 @Injectable()
 export class UserService {
@@ -219,5 +220,22 @@ export class UserService {
         const hash = await bcrypt.hash(newPassword, 10);
         user.password = hash;
         await this.userRepository.save(user);
+    }
+
+    async setActiveStatus(userId: string, isActive: boolean): Promise<User> {
+        const user = await this.userRepository.findOneBy({ id: userId });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
+
+        user.isActive = isActive;
+        return this.userRepository.save(user);
+    }
+
+    /** Cambia el rol de un usuario */
+    async setUserRole(userId: string, newRole: Role): Promise<User> {
+        const user = await this.userRepository.findOneBy({ id: userId });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
+
+        user.role = newRole;
+        return this.userRepository.save(user);
     }
 }

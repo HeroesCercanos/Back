@@ -25,6 +25,8 @@ import { Roles } from "src/auth/decorator/roles.decorator";
 import { RolesGuard } from "src/auth/guards/google-auth/roles.guard";
 import { Role } from "./role.enum";
 import { ChangePasswordDto } from "src/auth/dto/change-password.dto";
+import { UpdateActiveDto } from "src/auth/dto/update-active.dto";
+import { UpdateRoleDto } from "src/auth/dto/update-role.dto";
 
 @Controller("users")
 export class UserController {
@@ -149,4 +151,27 @@ export class UserController {
         await this.userService.changePassword(req.user.id, dto.newPassword);
         return { message: "Contraseña actualizada" };
     }
+
+    /** PATCH /users/:id/active — admin desactiva/reactiva a otro usuario */
+    @Patch(":id/active")
+    @Roles(Role.ADMIN)
+    async updateUserActive(
+        @Param("id") id: string,
+        @Body() dto: UpdateActiveDto,
+    ) {
+        return this.userService.setActiveStatus(id, dto.isActive);
+    }
+
+     /**
+   * PATCH /users/:id/role
+   * Solo administradores pueden cambiar el rol de un usuario
+   */
+  @Patch(':id/role')
+  @Roles(Role.ADMIN)
+  async changeRole(
+    @Param('id') id: string,
+    @Body() dto: UpdateRoleDto,
+  ): Promise<User> {
+    return this.userService.setUserRole(id, dto.role);
+  }
 }
