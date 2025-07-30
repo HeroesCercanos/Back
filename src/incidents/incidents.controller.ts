@@ -12,9 +12,10 @@ import {
 import { IncidentService } from "./incidents.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { AdminActionDto } from "./dto/admin-action.dto";
-import { Incident } from "./entity/incident.entity";
+import { Incident, IncidentStatus, IncidentType } from "./entity/incident.entity";
 import { AuthGuard } from "@nestjs/passport";
 import IncidentHistory from "./entity/incident-history.entity";
+import { ReportMetrics } from "./interface/incidents.interface";
 
 @Controller("incident")
 export class IncidentController {
@@ -55,5 +56,30 @@ export class IncidentController {
         @Body() dto: AdminActionDto,
     ): Promise<Incident> {
         return this.incidentService.updateByAdmin(id, dto);
+    }
+
+    @Get("metrics/total")
+    getTotal(): Promise<number> {
+        return this.incidentService.getTotalReports();
+    }
+
+    @Get("metrics/weekly")
+    getWeekly(): Promise<{ week: Date; count: number }[]> {
+        return this.incidentService.getWeeklyReports();
+    }
+
+    @Get("metrics/monthly")
+    getMonthly(): Promise<{ month: Date; count: number }[]> {
+        return this.incidentService.getMonthlyReports();
+    }
+
+    @Get("metrics/status")
+    getByStatus(): Promise<{ status: IncidentStatus; count: number }[]> {
+        return this.incidentService.getReportsByStatus();
+    }
+
+    @Get("metrics/type")
+    getByType(): Promise<{ type: IncidentType; count: number }[]> {
+        return this.incidentService.getReportsByType();
     }
 }

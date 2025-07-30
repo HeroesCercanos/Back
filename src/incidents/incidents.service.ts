@@ -1,11 +1,16 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
-import { Incident } from "./entity/incident.entity";
+import {
+    Incident,
+    IncidentStatus,
+    IncidentType,
+} from "./entity/incident.entity";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { AdminActionDto } from "./dto/admin-action.dto";
 import { User } from "src/user/entity/user.entity";
 import { IncidentHistory } from "./entity/incident-history.entity";
+import { ReportMetrics } from "./interface/incidents.interface";
 
 @Injectable()
 export class IncidentService {
@@ -67,5 +72,62 @@ export class IncidentService {
             order: { createdAt: "DESC" },
             relations: ["incident"],
         });
+    }
+
+    /** Solo semanal */
+    async getWeeklyReports(): Promise<{ week: Date; count: number }[]> {
+        const raw = await this.incidentRepo
+            .createQueryBuilder("i")
+            .select("date_trunc('week', i.createdAt)", "period")
+            .addSelect("COUNT(*)", "count")
+            .groupBy("period")
+            .orderBy("period", "DESC")
+            .getRawMany<{ period: Date; count: string }>();
+
+        return raw.map((r) => ({ week: r.period, count: +r.count }));
+    }
+
+    /** Solo mensual */
+    async getMonthlyReports(): Promise<{ month: Date; count: number }[]> {
+        const raw = await this.incidentRepo
+            .createQueryBuilder("i")
+            .select("date_trunc('month', i.createdAt)", "period")
+            .addSelect("COUNT(*)", "count")
+            .groupBy("period")
+            .orderBy("period", "DESC")
+            .getRawMany<{ period: Date; count: string }>();
+
+        return raw.map((r) => ({ month: r.period, count: +r.count }));
+    }
+
+    /** Solo por estado */
+    async getReportsByStatus(): Promise<
+        { status: IncidentStatus; count: number }[]
+    > {
+        const raw = await this.incidentRepo
+            .createQueryBuilder("i")
+            .select("i.status", "status")
+            .addSelect("COUNT(*)", "count")
+            .groupBy("i.status")
+            .getRawMany<{ status: IncidentStatus; count: string }>();
+
+        return raw.map((r) => ({ status: r.status, count: +r.count }));
+    }
+
+    /** Solo por tipo */
+    async getReportsByType(): Promise<{ type: IncidentType; count: number }[]> {
+        const raw = await this.incidentRepo
+            .createQueryBuilder("i")
+            .select("i.type", "type")
+            .addSelect("COUNT(*)", "count")
+            .groupBy("i.type")
+            .getRawMany<{ type: IncidentType; count: string }>();
+
+        return raw.map((r) => ({ type: r.type, count: +r.count }));
+    }
+
+    /** Total */
+    async getTotalReports(): Promise<number> {
+        return this.incidentRepo.count();
     }
 }
