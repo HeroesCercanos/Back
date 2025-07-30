@@ -1,4 +1,5 @@
 import {
+    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -23,6 +24,7 @@ import { UpdateUserDto } from "src/auth/dto/update-user.dto";
 import { Roles } from "src/auth/decorator/roles.decorator";
 import { RolesGuard } from "src/auth/guards/google-auth/roles.guard";
 import { Role } from "./role.enum";
+import { ChangePasswordDto } from "src/auth/dto/change-password.dto";
 
 @Controller("users")
 export class UserController {
@@ -136,5 +138,15 @@ export class UserController {
             }
         }
         return this.userService.getUserRegistrationsLastNMonths(nMonths);
+    }
+    @Patch("password")
+    async updatePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
+        // (opcional) validar dto.newPassword === dto.confirmPassword
+        if (dto.newPassword !== dto.confirmPassword) {
+            throw new BadRequestException("Las contraseñas no coinciden");
+        }
+
+        await this.userService.changePassword(req.user.id, dto.newPassword);
+        return { message: "Contraseña actualizada" };
     }
 }

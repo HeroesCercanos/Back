@@ -211,4 +211,13 @@ export class UserService {
             count: parseInt(row.count, 10),
         }));
     }
+
+    async changePassword(userId: string, newPassword: string) {
+        const user = await this.userRepository.findOneBy({ id: userId });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
+
+        const hash = await bcrypt.hash(newPassword, 10);
+        user.password = hash;
+        await this.userRepository.save(user);
+    }
 }
