@@ -39,7 +39,6 @@ export class SchedulerService implements OnModuleInit {
         const cronExpr = this.getCronExpr(job);
         const task = new CronJob(cronExpr, async () => {
             const tpl = await this.tplService.findOne(job.template.id);
-
             const recipients = await this.fetchAllUserEmails();
             await this.emailService.sendTemplate(tpl, recipients);
         });
