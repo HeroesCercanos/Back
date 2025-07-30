@@ -260,6 +260,28 @@ export class DonationService {
     async markAsCompleted(id: string): Promise<void> {
         await this.donationRepo.update(id, { status: "completed" });
     }
+
+    async getUserDonationsSummary(
+        user: User,
+    ): Promise<{ total: number; count: number }> {
+        const result = await this.donationRepo
+            .createQueryBuilder("d")
+            .select("SUM(d.amount)", "total")
+            .addSelect("COUNT(d.id)", "count")
+            .where("d.userId = :userId", { userId: user.id })
+            .andWhere("d.status = :status", { status: "completed" })
+            .getRawOne<{ total: string; count: string }>();
+
+        // Si no hay filas, devolvemos 0 y 0
+        if (!result) {
+            return { total: 0, count: 0 };
+        }
+
+        return {
+            total: parseFloat(result.total),
+            count: parseInt(result.count, 10),
+        };
+    }
 }
 
 /** Crea una donación para un usuario */

@@ -7,6 +7,8 @@ import {
     UseGuards,
     Query,
     Logger,
+    Req,
+    Param,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { DonationService } from "./donations.service";
@@ -28,6 +30,18 @@ export class DonationController {
     @UseGuards(AuthGuard("jwt"))
     findByUser(@CurrentUser() user: User): Promise<Donation[]> {
         return this.donationService.findByUser(user);
+    }
+
+    @Get("my/summary")
+    getMyDonationsSummary(@Req() req: any) {
+        return this.donationService.getUserDonationsSummary(req.user);
+    }
+
+    @Get("user/:id/history")
+    @UseGuards(AuthGuard("jwt"), RolesGuard)
+    @Roles(Role.ADMIN)
+    getUserDonations(@Param("id") userId: string) {
+        return this.donationService.findByUser({ id: userId } as User);
     }
 
     // 🔒 Historial mensual (admin)
