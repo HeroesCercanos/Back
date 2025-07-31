@@ -223,11 +223,16 @@ export class UserService {
     }
 
     async setActiveStatus(userId: string, isActive: boolean): Promise<User> {
+        this.logger.log(`Cambiando isActive de ${userId} a ${isActive}`);
         const user = await this.userRepository.findOneBy({ id: userId });
-        if (!user) throw new NotFoundException("Usuario no encontrado");
-
+        if (!user) {
+            this.logger.warn(`Usuario no encontrado: ${userId}`);
+            throw new NotFoundException("Usuario no encontrado");
+        }
         user.isActive = isActive;
-        return this.userRepository.save(user);
+        const updated = await this.userRepository.save(user);
+        this.logger.log(`Usuario ${userId} ahora isActive=${updated.isActive}`);
+        return updated;
     }
 
     /** Cambia el rol de un usuario */
