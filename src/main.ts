@@ -6,33 +6,24 @@ import { loggerGlobal } from "./middlewares/logger.middleware";
 import { ValidationPipe } from "@nestjs/common";
 import { seedAdmin } from "./seeds/admin.seed";
 import { seedQuarter } from "./seeds/quarter.seed";
-import * as cookieParser from "cookie-parser";
+import * as cookieParser from 'cookie-parser';
 
 async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
-    app.useGlobalPipes(
-        new ValidationPipe({
-            whitelist: true,
-            transform: true, // convierte "false" -> false, "123" -> 123, etc.
-            forbidNonWhitelisted: true,
-        }),
-    );
+    app.useGlobalPipes(new ValidationPipe());
 
     app.use(loggerGlobal);
-
     const config = new DocumentBuilder()
         .setTitle("Heroes Cercanos API")
         .setVersion("1.0")
         .addBearerAuth()
         .build();
-
     const doc = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup("docs", app, doc);
-    
-    await seedAdmin();
+
     if (process.env.NODE_ENV !== "production") {
-        // inserta el admin si no existe
+        await seedAdmin(); // inserta el admin si no existe
         await seedQuarter();
     }
 
