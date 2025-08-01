@@ -9,5 +9,6 @@ import { MailController } from "./mail.controller";
     imports: [ConfigModule], // para leer variables de entorno
     providers: [MailService],
     controllers: [MailController],
+    exports: [MailService],
 })
 export class MailModule {}
