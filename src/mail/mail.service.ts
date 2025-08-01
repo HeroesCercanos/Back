@@ -6,6 +6,7 @@ import { RegistrationEmailDto } from "./dto/registration-email.dto";
 import { DonationEmailDto } from "./dto/donation-email.dto";
 import { IncidentEmailDto } from "./dto/incident-email.dto";
 import { ResetPasswordEmailDto } from "../auth/dto/reset-password-email.dto";
+import { BanEmailDto } from "./dto/ban-email.dto";
 
 @Injectable()
 export class MailService {
@@ -267,5 +268,45 @@ export class MailService {
         });
 
         this.logger.log(`Password reset email sent: ${info.messageId}`);
+    }
+
+    async sendBanEmail(dto: BanEmailDto) {
+        const { name, email, banCount, bannedUntil } = dto;
+
+        // Definimos sujetos y cuerpos según el número de banneo
+        const subjects = [
+            "🚫 Has sido suspendido 1 día",
+            "🚫 Has sido suspendido 5 días",
+            "🚫 Has sido suspendido 1 mes",
+        ];
+        const bodies = [
+            `<p>Hola ${name},</p>
+       <p>Esta es tu <strong>primera</strong> sanción: tu cuenta estará bloqueada hasta el ${bannedUntil.toLocaleString()}.</p>`,
+            `<p>Hola ${name},</p>
+       <p>Esta es tu <strong>segunda</strong> sanción: tu cuenta estará bloqueada hasta el ${bannedUntil.toLocaleString()}.</p>`,
+            `<p>Hola ${name},</p>
+       <p>Esta es tu <strong>tercera</strong> sanción: tu cuenta estará bloqueada hasta el ${bannedUntil.toLocaleString()}.</p>`,
+        ];
+
+        // Elegimos índice sin pasarnos del array
+        const idx = Math.min(banCount, subjects.length) - 1;
+
+        const info = await this.transporter.sendMail({
+            from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+            to: email,
+            subject: subjects[idx],
+            html: `
+        <div style="font-family: Arial, sans-serif; color: #333; max-width:600px; margin:0 auto; padding:20px;">
+          ${bodies[idx]}
+          <p>Si crees que esto es un error, contactanos respondiendo a este correo.</p>
+          <hr/>
+          <footer style="font-size:12px; color:#666;">
+            Este mensaje fue enviado automáticamente por <strong>Héroes Cercanos</strong>.
+          </footer>
+        </div>
+      `,
+        });
+
+        this.logger.log(`Ban email sent to ${email}: ${info.messageId}`);
     }
 }

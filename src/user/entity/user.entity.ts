@@ -63,4 +63,10 @@ export class User {
 
     @Column({ type: "boolean", default: true })
     isActive: boolean;
+
+    @Column({ default: 0 })
+    banCount: number;
+
+    @Column({ type: "timestamptz", nullable: true })
+    bannedUntil: Date | null;
 }

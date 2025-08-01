@@ -4,6 +4,8 @@ import { Repository } from "typeorm";
 import { User } from "./entity/user.entity"; // ajustá ruta si necesario
 import * as bcrypt from "bcrypt";
 import { Role } from "./role.enum";
+import { BanEmailDto } from "src/mail/dto/ban-email.dto";
+import { MailService } from "src/mail/mail.service";
 
 @Injectable()
 export class UserService {
@@ -11,6 +13,7 @@ export class UserService {
     constructor(
         @InjectRepository(User)
         private userRepository: Repository<User>,
+        private mailService: MailService,
     ) {}
     // Devuelve todos los usuarios
     async findAll(): Promise<User[]> {
@@ -242,5 +245,42 @@ export class UserService {
 
         user.role = newRole;
         return this.userRepository.save(user);
+    }
+
+    async banearUsuario(userId: string): Promise<void> {
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+        });
+        if (!user) throw new NotFoundException();
+
+        user.banCount = (user.banCount || 0) + 1;
+        const ahora = new Date();
+        let until = new Date(ahora);
+
+        switch (user.banCount) {
+            case 1:
+                until.setDate(ahora.getDate() + 1);
+                break;
+            case 2:
+                until.setDate(ahora.getDate() + 5);
+                break;
+            case 3:
+                until.setMonth(ahora.getMonth() + 1);
+                break;
+            default:
+                until.setMonth(ahora.getMonth() + 1);
+        }
+        user.bannedUntil = until;
+        await this.userRepository.save(user);
+
+        // PREPARAMOS EL DTO y enviamos el mail
+        const banDto: BanEmailDto = {
+            name: user.name,
+            email: user.email,
+            banCount: user.banCount,
+            bannedUntil: user.bannedUntil,
+        };
+
+        await this.mailService.sendBanEmail(banDto);
     }
 }

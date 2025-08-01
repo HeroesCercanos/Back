@@ -1,5 +1,5 @@
 // src/auth/strategies/jwt.strategy.ts
-import { Injectable, UnauthorizedException } from "@nestjs/common";
+import { ForbiddenException, Injectable, UnauthorizedException } from "@nestjs/common";
 import { PassportStrategy } from "@nestjs/passport";
 import { Strategy, ExtractJwt, JwtFromRequestFunction } from "passport-jwt";
 import { Request } from "express";
@@ -35,6 +35,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, "jwt") {
         }
         if (!user.isActive) {
             throw new UnauthorizedException("Cuenta desactivada");
+        }
+
+        // ← Verificación de banneo
+        if (user.bannedUntil && user.bannedUntil > new Date()) {
+            // Puedes lanzar ForbiddenException para diferenciarlo de credenciales inválidas
+            throw new ForbiddenException(
+                `Estás suspendido hasta ${user.bannedUntil.toLocaleString()}`,
+            );
         }
         return user;
     }

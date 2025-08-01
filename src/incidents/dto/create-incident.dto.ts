@@ -11,7 +11,7 @@ export class CreateIncidentDto {
   @IsLongitude()
   longitude: number;
 
-  @IsOptional()
+  @IsOptional() 
   @IsString()
   description?: string;
 }
