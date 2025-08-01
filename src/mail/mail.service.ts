@@ -7,6 +7,7 @@ import { DonationEmailDto } from "./dto/donation-email.dto";
 import { IncidentEmailDto } from "./dto/incident-email.dto";
 import { ResetPasswordEmailDto } from "../auth/dto/reset-password-email.dto";
 import { BanEmailDto } from "./dto/ban-email.dto";
+import { ReactivationEmailDto } from "./dto/reactivation-email.dto";
 
 @Injectable()
 export class MailService {
@@ -308,5 +309,30 @@ export class MailService {
         });
 
         this.logger.log(`Ban email sent to ${email}: ${info.messageId}`);
+    }
+
+    async sendReactivationEmail(dto: ReactivationEmailDto) {
+        const { name, email, previousBannedUntil } = dto;
+
+        const info = await this.transporter.sendMail({
+            from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+            to: email,
+            subject: "✅ Tu cuenta ha sido reactivada",
+            html: `
+        <div style="font-family: Arial, sans-serif; color: #333; max-width:600px; margin:0 auto; padding:20px;">
+          <h2 style="text-align:center; color:#2e7d32;">¡Bienvenido de vuelta, ${name}!</h2>
+          <p>Tu cuenta ha sido <strong>reactivada</strong> correctamente.</p>
+          <p>La última suspensión expiró el <em>${previousBannedUntil.toLocaleString()}</em>.</p>
+          <p>Si tienes dudas o necesitas ayuda, no dudes en responder a este correo.</p>
+          <hr/>
+          <footer style="font-size:12px; color:#666; text-align:center;">
+            Este mensaje fue enviado automáticamente por <strong>Héroes Cercanos</strong>.<br/>
+            <em>Doná. Ayudá. Salvá.</em>
+          </footer>
+        </div>
+      `,
+        });
+
+        this.logger.log(`Reactivation email sent: ${info.messageId}`);
     }
 }

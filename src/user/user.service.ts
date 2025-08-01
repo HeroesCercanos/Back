@@ -225,23 +225,38 @@ export class UserService {
         await this.userRepository.save(user);
     }
 
+    // src/users/users.service.ts
     async setActiveStatus(userId: string, isActive: boolean): Promise<User> {
         this.logger.log(`Cambiando isActive de ${userId} a ${isActive}`);
+        const user = await this.userRepository.findOneBy({ id: userId });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
 
         if (!isActive) {
-            // desactivación = ban progresivo
+            // ban progresivo…
             const bannedUser = await this.banearUsuario(userId);
             bannedUser.isActive = false;
             return this.userRepository.save(bannedUser);
         }
 
-        // reactivación manual
-        const user = await this.userRepository.findOneBy({ id: userId });
-        if (!user) throw new NotFoundException("Usuario no encontrado");
-
+        // Reactivación: capturamos cuándo venció el ban
+        const previousBannedUntil = user.bannedUntil;
         user.isActive = true;
-        // opcional limpiar ban: user.bannedUntil = null;
-        return this.userRepository.save(user);
+        // opcional: limpiar campos de ban
+        // user.bannedUntil = null;
+        // user.banCount = 0;
+
+        const updated = await this.userRepository.save(user);
+
+        // Si venía de estar suspendido, mandamos el mail
+        if (previousBannedUntil && previousBannedUntil > new Date(0)) {
+            await this.mailService.sendReactivationEmail({
+                name: updated.name,
+                email: updated.email,
+                previousBannedUntil,
+            });
+        }
+
+        return updated;
     }
 
     /** Cambia el rol de un usuario */
