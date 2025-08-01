@@ -10,6 +10,7 @@ import {
     NotFoundException,
     Param,
     ParseIntPipe,
+    ParseUUIDPipe,
     Patch,
     Post,
     Put,
@@ -162,16 +163,23 @@ export class UserController {
         return this.userService.setActiveStatus(id, dto.isActive);
     }
 
-     /**
-   * PATCH /users/:id/role
-   * Solo administradores pueden cambiar el rol de un usuario
-   */
-  @Patch(':id/role')
-  @Roles(Role.ADMIN)
-  async changeRole(
-    @Param('id') id: string,
-    @Body() dto: UpdateRoleDto,
-  ): Promise<User> {
-    return this.userService.setUserRole(id, dto.role);
-  }
+    /**
+     * PATCH /users/:id/role
+     * Solo administradores pueden cambiar el rol de un usuario
+     */
+    @Patch(":id/role")
+    @Roles(Role.ADMIN)
+    async changeRole(
+        @Param("id") id: string,
+        @Body() dto: UpdateRoleDto,
+    ): Promise<User> {
+        return this.userService.setUserRole(id, dto.role);
+    }
+
+    @Patch("users/:id/ban")
+    @UseGuards(RolesGuard)
+    @Roles(Role.ADMIN)
+    async banUser(@Param("id", new ParseUUIDPipe()) id: string) {
+        return this.userService.banearUsuario(id);
+    }
 }

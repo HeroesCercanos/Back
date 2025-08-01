@@ -227,15 +227,21 @@ export class UserService {
 
     async setActiveStatus(userId: string, isActive: boolean): Promise<User> {
         this.logger.log(`Cambiando isActive de ${userId} a ${isActive}`);
-        const user = await this.userRepository.findOneBy({ id: userId });
-        if (!user) {
-            this.logger.warn(`Usuario no encontrado: ${userId}`);
-            throw new NotFoundException("Usuario no encontrado");
+
+        if (!isActive) {
+            // desactivación = ban progresivo
+            const bannedUser = await this.banearUsuario(userId);
+            bannedUser.isActive = false;
+            return this.userRepository.save(bannedUser);
         }
-        user.isActive = isActive;
-        const updated = await this.userRepository.save(user);
-        this.logger.log(`Usuario ${userId} ahora isActive=${updated.isActive}`);
-        return updated;
+
+        // reactivación manual
+        const user = await this.userRepository.findOneBy({ id: userId });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
+
+        user.isActive = true;
+        // opcional limpiar ban: user.bannedUntil = null;
+        return this.userRepository.save(user);
     }
 
     /** Cambia el rol de un usuario */
@@ -247,16 +253,15 @@ export class UserService {
         return this.userRepository.save(user);
     }
 
-    async banearUsuario(userId: string): Promise<void> {
-        const user = await this.userRepository.findOne({
-            where: { id: userId },
-        });
-        if (!user) throw new NotFoundException();
+    /** Ahora retorna el User modificado */
+    async banearUsuario(userId: string): Promise<User> {
+        const user = await this.userRepository.findOneBy({ id: userId });
+        if (!user) throw new NotFoundException("Usuario no encontrado");
 
+        // lógica de banneo igual que antes…
         user.banCount = (user.banCount || 0) + 1;
         const ahora = new Date();
         let until = new Date(ahora);
-
         switch (user.banCount) {
             case 1:
                 until.setDate(ahora.getDate() + 1);
@@ -271,16 +276,15 @@ export class UserService {
                 until.setMonth(ahora.getMonth() + 1);
         }
         user.bannedUntil = until;
-        await this.userRepository.save(user);
+        const updated = await this.userRepository.save(user);
 
-        // PREPARAMOS EL DTO y enviamos el mail
-        const banDto: BanEmailDto = {
-            name: user.name,
-            email: user.email,
-            banCount: user.banCount,
-            bannedUntil: user.bannedUntil,
-        };
+        await this.mailService.sendBanEmail({
+            name: updated.name,
+            email: updated.email,
+            banCount: updated.banCount,
+            bannedUntil: updated.bannedUntil!, // aquí sabes que no es null
+        });
 
-        await this.mailService.sendBanEmail(banDto);
+        return updated;
     }
 }

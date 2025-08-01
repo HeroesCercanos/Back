@@ -3,5 +3,5 @@ export class BanEmailDto {
   name: string;
   email: string;
   banCount: number;
-  bannedUntil: Date;
+  bannedUntil: Date ;
 }
