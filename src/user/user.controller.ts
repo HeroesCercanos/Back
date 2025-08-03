@@ -28,11 +28,15 @@ import { Role } from "./role.enum";
 import { ChangePasswordDto } from "src/auth/dto/change-password.dto";
 import { UpdateActiveDto } from "src/auth/dto/update-active.dto";
 import { UpdateRoleDto } from "src/auth/dto/update-role.dto";
+import { BanService } from "src/bans/ban.service";
 
 @Controller("users")
 export class UserController {
     private readonly logger = new Logger(UserService.name);
-    constructor(private readonly userService: UserService) {}
+    constructor(
+        private readonly userService: UserService,
+        private readonly banService: BanService,
+    ) {}
 
     @Get()
     async getAll(): Promise<User[]> {
@@ -153,14 +157,13 @@ export class UserController {
         return { message: "Contraseña actualizada" };
     }
 
-    /** PATCH /users/:id/active — admin desactiva/reactiva a otro usuario */
     @Patch(":id/active")
     @Roles(Role.ADMIN)
-    async updateUserActive(
-        @Param("id") id: string,
-        @Body() dto: UpdateActiveDto,
-    ) {
-        return this.userService.setActiveStatus(id, dto.isActive);
+    async setActiveStatus(
+        @Param("id", new ParseUUIDPipe()) id: string,
+        @Body() dto: UpdateActiveDto, // { isActive: boolean; reason?: string }
+    ): Promise<User> {
+        return this.userService.setActiveStatus(id, dto.isActive, dto.reason);
     }
 
     /**
@@ -178,7 +181,13 @@ export class UserController {
 
     @Patch(":id/ban")
     @Roles(Role.ADMIN)
-    async banUser(@Param("id", new ParseUUIDPipe()) id: string): Promise<User> {
-        return this.userService.setActiveStatus(id, false);
+    async banUser(
+        @Param("id", new ParseUUIDPipe()) id: string,
+        @Body("reason") reason?: string, // opcional motivo
+    ): Promise<User> {
+        // **ÚNICA** llamada a banUser en controlador de usuarios
+        await this.banService.banUser(id, true, reason);
+        // luego devolvemos el usuario actualizado
+        return this.userService.findById(id);
     }
 }

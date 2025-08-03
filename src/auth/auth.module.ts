@@ -12,10 +12,11 @@ import { JwtStrategy } from "./strategies/jwt.strategy";
 import { MailModule } from "src/mail/mail.module";
 import { MailService } from "src/mail/mail.service";
 import { BansModule } from "src/bans/ban.module";
+import { Donation } from "src/donations/entity/donation.entity";
 
 @Module({
     imports: [
-        TypeOrmModule.forFeature([User]),
+        TypeOrmModule.forFeature([User, Donation]),
         PassportModule,
         UserModule,
         MailModule,

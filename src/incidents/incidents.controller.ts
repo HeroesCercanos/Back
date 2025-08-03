@@ -71,10 +71,10 @@ export class IncidentController {
     async updateStatus(
         @Param("id", new ParseUUIDPipe()) id: string,
         @Body("status") status: IncidentStatus,
-    ): Promise<Incident> {
+    ) {
+        // aquí pasás 'true' para adminOverride
         return this.incidentService.updateStatus(id, status, true);
     }
-
 
     @Get("metrics/total")
     getTotal(): Promise<number> {
@@ -99,5 +99,14 @@ export class IncidentController {
     @Get("metrics/type")
     getByType(): Promise<{ type: IncidentType; count: number }[]> {
         return this.incidentService.getReportsByType();
+    }
+
+    @Get("user/:id/count")
+    @Roles(Role.ADMIN)
+    async countByUser(
+        @Param("id", new ParseUUIDPipe()) userId: string,
+    ): Promise<{ userId: string; totalReports: number }> {
+        const totalReports = await this.incidentService.countByUser(userId);
+        return { userId, totalReports };
     }
 }

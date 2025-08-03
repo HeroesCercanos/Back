@@ -8,6 +8,7 @@ import { IncidentEmailDto } from "./dto/incident-email.dto";
 import { ResetPasswordEmailDto } from "../auth/dto/reset-password-email.dto";
 import { BanEmailDto } from "./dto/ban-email.dto";
 import { ReactivationEmailDto } from "./dto/reactivation-email.dto";
+import { RoleChangeEmailDto } from "./dto/role-change-email.dto";
 
 @Injectable()
 export class MailService {
@@ -30,7 +31,7 @@ export class MailService {
 
     async sendRegistrationEmail(dto: RegistrationEmailDto) {
         const { name, email } = dto;
-
+        0;
         const info = await this.transporter.sendMail({
             from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
             to: email,
@@ -271,44 +272,31 @@ export class MailService {
         this.logger.log(`Password reset email sent: ${info.messageId}`);
     }
 
-    async sendBanEmail(dto: BanEmailDto) {
-        const { name, email, banCount, bannedUntil } = dto;
+    async sendBanEmail(dto: BanEmailDto, ordinal: string) {
+        const { name, email, bannedUntil, reason } = dto;
 
-        // Definimos sujetos y cuerpos según el número de banneo
-        const subjects = [
-            "🚫 Has sido suspendido 1 día",
-            "🚫 Has sido suspendido 5 días",
-            "🚫 Has sido suspendido 1 mes",
-        ];
-        const bodies = [
-            `<p>Hola ${name},</p>
-       <p>Esta es tu <strong>primera</strong> sanción: tu cuenta estará bloqueada hasta el ${bannedUntil.toLocaleString()}.</p>`,
-            `<p>Hola ${name},</p>
-       <p>Esta es tu <strong>segunda</strong> sanción: tu cuenta estará bloqueada hasta el ${bannedUntil.toLocaleString()}.</p>`,
-            `<p>Hola ${name},</p>
-       <p>Esta es tu <strong>tercera</strong> sanción: tu cuenta estará bloqueada hasta el ${bannedUntil.toLocaleString()}.</p>`,
-        ];
+        const subject = `🚫 Has sido suspendido por ${ordinal} vez`;
+        let body = `
+    <p>Hola ${name},</p>
+    <p>Esta es tu <strong>${ordinal}</strong> sanción: tu cuenta estará bloqueada hasta el <em>${bannedUntil.toLocaleString()}</em>.</p>
+  `;
+        if (reason) {
+            body += `<p><strong>Motivo:</strong> ${reason}</p>`;
+        }
+        body += `
+    <p>Si crees que esto es un error, contáctanos respondiendo a este correo.</p>
+    <hr/>
+    <footer style="font-size:12px; color:#666;">
+      Este mensaje fue enviado automáticamente por <strong>Héroes Cercanos</strong>.
+    </footer>
+  `;
 
-        // Elegimos índice sin pasarnos del array
-        const idx = Math.min(banCount, subjects.length) - 1;
-
-        const info = await this.transporter.sendMail({
+        await this.transporter.sendMail({
             from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
             to: email,
-            subject: subjects[idx],
-            html: `
-        <div style="font-family: Arial, sans-serif; color: #333; max-width:600px; margin:0 auto; padding:20px;">
-          ${bodies[idx]}
-          <p>Si crees que esto es un error, contactanos respondiendo a este correo.</p>
-          <hr/>
-          <footer style="font-size:12px; color:#666;">
-            Este mensaje fue enviado automáticamente por <strong>Héroes Cercanos</strong>.
-          </footer>
-        </div>
-      `,
+            subject,
+            html: `<div style="font-family:Arial,sans-serif; color:#333; padding:20px; max-width:600px;">${body}</div>`,
         });
-
-        this.logger.log(`Ban email sent to ${email}: ${info.messageId}`);
     }
 
     async sendReactivationEmail(dto: ReactivationEmailDto) {
@@ -334,5 +322,56 @@ export class MailService {
         });
 
         this.logger.log(`Reactivation email sent: ${info.messageId}`);
+    }
+
+    async sendRoleChangeEmail(dto: RoleChangeEmailDto) {
+        const { name, email, oldRole, newRole } = dto;
+
+        let subject: string;
+        let htmlBody: string;
+
+        if (oldRole !== "admin" && newRole === "admin") {
+            // promoción
+            subject = `🔑 Has sido promovido a ADMIN`;
+            htmlBody = `
+      <h2>¡Felicitaciones, ${name}!</h2>
+      <p>Tu cuenta ha sido actualizada y ahora eres <strong>Administrador</strong> en Héroes Cercanos.</p>
+    `;
+        } else if (oldRole === "admin" && newRole !== "admin") {
+            // democión
+            subject = `⚠️ Tu rol ha cambiado a ${newRole.toUpperCase()}`;
+            htmlBody = `
+      <h2>Hola ${name},</h2>
+      <p>Tu rol en la plataforma ha sido modificado de <strong>Administrador</strong> a <strong>${newRole}</strong>.</p>
+      <p>Si tienes dudas, contactá a soporte.</p>
+    `;
+        } else {
+            // otros cambios de rol (por si hay más roles)
+            subject = `🔄 Tu rol ahora es ${newRole.toUpperCase()}`;
+            htmlBody = `
+      <h2>Hola ${name},</h2>
+      <p>Tu rol en Héroes Cercanos ha cambiado a <strong>${newRole}</strong>.</p>
+    `;
+        }
+
+        const html = `
+    <div style="font-family:Arial,sans-serif;color:#333;max-width:600px;margin:0 auto;padding:20px;">
+      ${htmlBody}
+      <hr/>
+      <footer style="font-size:12px;color:#666;text-align:center;">
+        Este mensaje fue enviado automáticamente por <strong>Héroes Cercanos</strong>.
+      </footer>
+    </div>
+  `;
+
+        const info = await this.transporter.sendMail({
+            from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
+            to: email,
+            subject,
+            html,
+        });
+        this.logger.log(
+            `Role-change email sent to ${email}: ${info.messageId}`,
+        );
     }
 }

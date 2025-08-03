@@ -9,6 +9,7 @@ import {
     Logger,
     Req,
     Param,
+    ParseUUIDPipe,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { DonationService } from "./donations.service";
@@ -104,6 +105,15 @@ export class DonationController {
         { date: string; total: number; count: number }[]
     > {
         return this.donationService.getWeeklyDonationsLast7Days();
+    }
+
+    @Get("user/:id/total")
+    async getTotalByUser(
+        @Param("id", new ParseUUIDPipe()) userId: string,
+    ): Promise<{ userId: string; totalDonated: number }> {
+        const totalDonated =
+            await this.donationService.getTotalDonationsByUser(userId);
+        return { userId, totalDonated };
     }
 }
 

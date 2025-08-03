@@ -59,16 +59,18 @@ export class IncidentService {
     }
 
     async updateByAdmin(id: string, dto: AdminActionDto): Promise<Incident> {
+        // 1) Cargo el incidente con usuario
         const incident = await this.incidentRepo.findOne({
             where: { id },
             relations: ["user"],
         });
-        if (!incident) throw new NotFoundException();
+        if (!incident) throw new NotFoundException("Incident not found");
 
+        // 2) Aplico cambios y guardo
         Object.assign(incident, dto);
         const updated = await this.incidentRepo.save(incident);
 
-        // Historial
+        // 3) Creo historial
         await this.historyRepo.save(
             this.historyRepo.create({
                 incident,
@@ -80,9 +82,13 @@ export class IncidentService {
             }),
         );
 
-        // Baneo automático (y mail dentro de BanService)
+        // 4) Si lo eliminó, baneo al usuario con motivo
         if (dto.status === IncidentStatus.ELIMINADO) {
-            await this.banService.banUser(incident.user.id, true);
+            await this.banService.banUser(
+                incident.user.id,
+                /* manual = */ true,
+                /* reason = */ dto.adminComment,
+            );
         }
 
         return updated;
@@ -96,17 +102,31 @@ export class IncidentService {
             where: { id },
             relations: ["user"],
         });
-        if (!incident) throw new NotFoundException();
+        if (!incident) throw new NotFoundException("Incident not found");
 
         incident.status = status;
-        await this.incidentRepo.save(incident);
+        const updated = await this.incidentRepo.save(incident);
 
         if (status === IncidentStatus.ELIMINADO) {
-            await this.banService.banUser(incident.user.id, adminOverride);
+            // adminOverride ? use adminComment : no reason
+            const reason = adminOverride ? incident.adminComment : undefined;
+            // **ÚNICA llamada que realiza el baneo completo**
+            await this.banService.banUser(
+                incident.user.id,
+                /* manual = */ adminOverride,
+                reason,
+            );
         }
 
-        return incident;
+        return updated;
     }
+
+    async countByUser(userId: string): Promise<number> {
+        return this.incidentRepo.count({
+            where: { user: { id: userId } },
+        });
+    }
+
     /**
      * Método genérico para actualizar sólo el status,
      * permitiendo indicar si es override (admin) o no.

@@ -1,5 +1,5 @@
 // src/bans/ban.service.ts
-import { Injectable } from "@nestjs/common";
+import { Injectable, NotFoundException } from "@nestjs/common";
 import { MoreThan, Repository } from "typeorm";
 import { Ban } from "./entity/ban.entity";
 import { User } from "src/user/entity/user.entity";
@@ -20,36 +20,58 @@ export class BanService {
      * @param userId Id del usuario a bannear.
      * @param manual Si es por acción manual de admin.
      */
-    async banUser(userId: string, manual = false) {
-        const user = await this.userRepo.findOneOrFail({
-            where: { id: userId },
-            relations: ["bans"],
-        });
+    async banUser(
+    userId: string,
+    manual = false,
+    reason?: string,
+  ): Promise<Ban> {
+    // 1) Cargo el usuario y su banCount
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('Usuario no encontrado');
 
-        const prevCount = user.bans.length;
-        const days = prevCount === 0 ? 1 : prevCount === 1 ? 5 : 30;
+    const prevCount = user.banCount || 0;
+    const newCount = prevCount + 1;
 
-        const now = new Date();
-        const expiresAt = new Date(now.getTime() + days * 86400000);
+    // 2) Duración según newCount
+    let days: number;
+    if (newCount === 1) days = 1;
+    else if (newCount === 2) days = 5;
+    else days = 30;
 
-        const ban = this.banRepo.create({ user, expiresAt, manual });
-        await this.banRepo.save(ban);
+    const expiresAt = new Date(Date.now() + days * 24 * 60 * 60 * 1000);
 
-        // → Incrementar banCount en User
-        user.banCount = prevCount + 1;
-        user.isActive = false; // desactivo al baneo
-        await this.userRepo.save(user);
+    // 3) Creo el Ban
+    const ban = this.banRepo.create({ user, expiresAt, manual });
+    await this.banRepo.save(ban);
 
-        // Enviar mail de baneo (ya recibe banCount actualizado)
-        await this.mailService.sendBanEmail({
-            name: user.name,
-            email: user.email,
-            banCount: user.banCount,
-            bannedUntil: expiresAt,
-        });
+    // 4) Actualizo el user con el nuevo count y lo desactivo
+    user.banCount = newCount;
+    user.isActive = false;
+    await this.userRepo.save(user);
 
-        return ban;
-    }
+    // 5) Armo el ordinal en español
+    const ordinals = [
+      'primera', 'segunda', 'tercera',
+      'cuarta', 'quinta', 'sexta', 'séptima'
+    ];
+    const ordinal =
+      newCount <= ordinals.length
+        ? ordinals[newCount - 1]
+        : `${newCount}ª`;
+
+    // 6) Envío el mail de baneo con motivo si existe
+    const dto: BanEmailDto = {
+      name: user.name,
+      email: user.email,
+      banCount: newCount,
+      bannedUntil: expiresAt,
+      reason,
+    };
+    await this.mailService.sendBanEmail(dto, ordinal);
+
+    return ban;
+  }
+
 
     async isBanned(userId: string): Promise<boolean> {
         const active = await this.banRepo.count({

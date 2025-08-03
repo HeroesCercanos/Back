@@ -1,7 +1,11 @@
 // src/user/dto/update-active.dto.ts
-import { IsBoolean } from 'class-validator';
+import { IsBoolean, IsOptional, IsString } from "class-validator";
 
 export class UpdateActiveDto {
-  @IsBoolean()
-  isActive: boolean;
+    @IsBoolean()
+    isActive: boolean;
+
+    @IsOptional()
+    @IsString()
+    reason?: string; // motivo de baneo manual
 }

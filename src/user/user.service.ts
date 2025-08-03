@@ -8,6 +8,7 @@ import { BanEmailDto } from "src/mail/dto/ban-email.dto";
 import { MailService } from "src/mail/mail.service";
 import { ReactivationEmailDto } from "src/mail/dto/reactivation-email.dto";
 import { BanService } from "src/bans/ban.service";
+import { Donation } from "src/donations/entity/donation.entity";
 
 @Injectable()
 export class UserService {
@@ -17,6 +18,8 @@ export class UserService {
         private userRepository: Repository<User>,
         private mailService: MailService,
         private banService: BanService,
+        @InjectRepository(Donation)
+        private donationRepository: Repository<Donation>,
     ) {}
     // Devuelve todos los usuarios
     async findAll(): Promise<User[]> {
@@ -27,8 +30,12 @@ export class UserService {
         return this.userRepository.findOne({ where: { email } });
     }
 
-    async findById(id: string): Promise<User | null> {
-        return this.userRepository.findOne({ where: { id } });
+    async findById(id: string): Promise<User> {
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new NotFoundException(`Usuario con id ${id} no encontrado`);
+        }
+        return user;
     }
 
     async findByGoogleId(googleId: string): Promise<User | null> {
@@ -229,27 +236,30 @@ export class UserService {
     }
 
     // src/users/users.service.ts
-    async setActiveStatus(userId: string, isActive: boolean): Promise<User> {
+    async setActiveStatus(
+        userId: string,
+        isActive: boolean,
+        reason?: string, // opcional motivo en ban manual
+    ): Promise<User> {
         const user = await this.userRepository.findOneBy({ id: userId });
         if (!user) throw new NotFoundException("Usuario no encontrado");
 
         if (!isActive) {
-            // Baneo manual
-            await this.banService.banUser(userId, true);
-            user.isActive = false;
-            return this.userRepository.save(user);
+            // 1) Disparo el ban progresivo y mail (BanService internamente actualiza banCount e isActive)
+            await this.banService.banUser(userId, /* manual */ true, reason);
+            // 2) Cargo de nuevo el user para devolver el estado más reciente
+            return this.findById(userId);
         }
 
-        // ————————————— REACTIVACIÓN —————————————
-        // Obtener la última sanción para notificar fecha
+        // ————— Reactivación —————
+        user.isActive = true;
+        const updated = await this.userRepository.save(user);
+
+        // envío mail de reactivación si ya tenía bans
         const bans = await this.banService.getBans(userId);
         const lastBan = bans.sort(
             (a, b) => b.expiresAt.getTime() - a.expiresAt.getTime(),
         )[0];
-
-        user.isActive = true;
-        const updated = await this.userRepository.save(user);
-
         if (lastBan) {
             await this.mailService.sendReactivationEmail({
                 name: updated.name,
@@ -263,10 +273,41 @@ export class UserService {
 
     /** Cambia el rol de un usuario */
     async setUserRole(userId: string, newRole: Role): Promise<User> {
-        const user = await this.userRepository.findOneBy({ id: userId });
-        if (!user) throw new NotFoundException("Usuario no encontrado");
+        const user = await this.findById(userId); // lanza si no existe
+        const oldRole = user.role;
 
         user.role = newRole;
-        return this.userRepository.save(user);
+        const updated = await this.userRepository.save(user);
+
+        if (oldRole !== newRole) {
+            // notificamos siempre el cambio de rol
+            await this.mailService.sendRoleChangeEmail({
+                name: updated.name,
+                email: updated.email,
+                oldRole,
+                newRole: updated.role,
+            });
+        }
+
+        return updated;
+    }
+
+    async getTotalDonationsByUser(userId: string): Promise<number> {
+        // Verifica que el userId exista para evitar queries sin sentido
+        // (opcional, si ya lo chequeas antes)
+        // const userExists = await this.userRepo.count({ where: { id: userId } });
+        // if (!userExists) throw new NotFoundException('Usuario no encontrado');
+
+        const result = await this.donationRepository
+            .createQueryBuilder("donation")
+            .select("COALESCE(SUM(donation.amount), 0)", "total")
+            .where("donation.userId = :userId", { userId })
+            .getRawOne<{ total: string }>();
+
+        // Si result es undefined, asumimos '0'
+        const totalString = result?.total ?? "0";
+        const total = parseFloat(totalString);
+
+        return total;
     }
 }
