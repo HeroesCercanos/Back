@@ -6,6 +6,8 @@ import * as bcrypt from "bcrypt";
 import { Role } from "./role.enum";
 import { BanEmailDto } from "src/mail/dto/ban-email.dto";
 import { MailService } from "src/mail/mail.service";
+import { ReactivationEmailDto } from "src/mail/dto/reactivation-email.dto";
+import { BanService } from "src/bans/ban.service";
 
 @Injectable()
 export class UserService {
@@ -14,6 +16,7 @@ export class UserService {
         @InjectRepository(User)
         private userRepository: Repository<User>,
         private mailService: MailService,
+        private banService: BanService,
     ) {}
     // Devuelve todos los usuarios
     async findAll(): Promise<User[]> {
@@ -227,32 +230,31 @@ export class UserService {
 
     // src/users/users.service.ts
     async setActiveStatus(userId: string, isActive: boolean): Promise<User> {
-        this.logger.log(`Cambiando isActive de ${userId} a ${isActive}`);
         const user = await this.userRepository.findOneBy({ id: userId });
         if (!user) throw new NotFoundException("Usuario no encontrado");
 
         if (!isActive) {
-            // ban progresivo…
-            const bannedUser = await this.banearUsuario(userId);
-            bannedUser.isActive = false;
-            return this.userRepository.save(bannedUser);
+            // Baneo manual
+            await this.banService.banUser(userId, true);
+            user.isActive = false;
+            return this.userRepository.save(user);
         }
 
-        // Reactivación: capturamos cuándo venció el ban
-        const previousBannedUntil = user.bannedUntil;
-        user.isActive = true;
-        // opcional: limpiar campos de ban
-        // user.bannedUntil = null;
-        // user.banCount = 0;
+        // ————————————— REACTIVACIÓN —————————————
+        // Obtener la última sanción para notificar fecha
+        const bans = await this.banService.getBans(userId);
+        const lastBan = bans.sort(
+            (a, b) => b.expiresAt.getTime() - a.expiresAt.getTime(),
+        )[0];
 
+        user.isActive = true;
         const updated = await this.userRepository.save(user);
 
-        // Si venía de estar suspendido, mandamos el mail
-        if (previousBannedUntil && previousBannedUntil > new Date(0)) {
+        if (lastBan) {
             await this.mailService.sendReactivationEmail({
                 name: updated.name,
                 email: updated.email,
-                previousBannedUntil,
+                previousBannedUntil: lastBan.expiresAt,
             });
         }
 
@@ -266,40 +268,5 @@ export class UserService {
 
         user.role = newRole;
         return this.userRepository.save(user);
-    }
-
-    /** Ahora retorna el User modificado */
-    async banearUsuario(userId: string): Promise<User> {
-        const user = await this.userRepository.findOneBy({ id: userId });
-        if (!user) throw new NotFoundException("Usuario no encontrado");
-
-        // lógica de banneo igual que antes…
-        user.banCount = (user.banCount || 0) + 1;
-        const ahora = new Date();
-        let until = new Date(ahora);
-        switch (user.banCount) {
-            case 1:
-                until.setDate(ahora.getDate() + 1);
-                break;
-            case 2:
-                until.setDate(ahora.getDate() + 5);
-                break;
-            case 3:
-                until.setMonth(ahora.getMonth() + 1);
-                break;
-            default:
-                until.setMonth(ahora.getMonth() + 1);
-        }
-        user.bannedUntil = until;
-        const updated = await this.userRepository.save(user);
-
-        await this.mailService.sendBanEmail({
-            name: updated.name,
-            email: updated.email,
-            banCount: updated.banCount,
-            bannedUntil: updated.bannedUntil!, // aquí sabes que no es null
-        });
-
-        return updated;
     }
 }

@@ -11,6 +11,7 @@ import { User } from "src/user/entity/user.entity";
 import { JwtStrategy } from "./strategies/jwt.strategy";
 import { MailModule } from "src/mail/mail.module";
 import { MailService } from "src/mail/mail.service";
+import { BansModule } from "src/bans/ban.module";
 
 @Module({
     imports: [
@@ -18,6 +19,7 @@ import { MailService } from "src/mail/mail.service";
         PassportModule,
         UserModule,
         MailModule,
+        BansModule,
         JwtModule.register({
             secret: process.env.JWT_SECRET || "tuSecretoMuySeguro",
             signOptions: { expiresIn: "1h" },

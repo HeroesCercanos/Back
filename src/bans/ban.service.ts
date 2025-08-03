@@ -28,21 +28,25 @@ export class BanService {
 
         const prevCount = user.bans.length;
         const days = prevCount === 0 ? 1 : prevCount === 1 ? 5 : 30;
+
         const now = new Date();
         const expiresAt = new Date(now.getTime() + days * 86400000);
 
         const ban = this.banRepo.create({ user, expiresAt, manual });
         await this.banRepo.save(ban);
 
-        // ——— ENVIAR CORREO ———
-        const banCount = prevCount + 1;
-        const dto: BanEmailDto = {
+        // → Incrementar banCount en User
+        user.banCount = prevCount + 1;
+        user.isActive = false; // desactivo al baneo
+        await this.userRepo.save(user);
+
+        // Enviar mail de baneo (ya recibe banCount actualizado)
+        await this.mailService.sendBanEmail({
             name: user.name,
             email: user.email,
-            banCount,
+            banCount: user.banCount,
             bannedUntil: expiresAt,
-        };
-        await this.mailService.sendBanEmail(dto);
+        });
 
         return ban;
     }
@@ -52,5 +56,9 @@ export class BanService {
             where: { user: { id: userId }, expiresAt: MoreThan(new Date()) },
         });
         return active > 0;
+    }
+
+    async getBans(userId: string): Promise<Ban[]> {
+        return this.banRepo.find({ where: { user: { id: userId } } });
     }
 }

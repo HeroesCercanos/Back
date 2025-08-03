@@ -67,4 +67,7 @@ export class User {
 
     @OneToMany(() => Ban, (ban) => ban.user)
     bans: Ban[];
+
+    @Column({ type: "int", default: 0 })
+    banCount: number;
 }

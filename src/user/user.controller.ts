@@ -176,10 +176,9 @@ export class UserController {
         return this.userService.setUserRole(id, dto.role);
     }
 
-    @Patch("users/:id/ban")
-    @UseGuards(RolesGuard)
+    @Patch(":id/ban")
     @Roles(Role.ADMIN)
-    async banUser(@Param("id", new ParseUUIDPipe()) id: string) {
-        return this.userService.banearUsuario(id);
+    async banUser(@Param("id", new ParseUUIDPipe()) id: string): Promise<User> {
+        return this.userService.setActiveStatus(id, false);
     }
 }
