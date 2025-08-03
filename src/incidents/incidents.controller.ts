@@ -8,14 +8,21 @@ import {
     ParseIntPipe,
     Req,
     UseGuards,
+    ParseUUIDPipe,
 } from "@nestjs/common";
 import { IncidentService } from "./incidents.service";
 import { CreateIncidentDto } from "./dto/create-incident.dto";
 import { AdminActionDto } from "./dto/admin-action.dto";
-import { Incident, IncidentStatus, IncidentType } from "./entity/incident.entity";
+import {
+    Incident,
+    IncidentStatus,
+    IncidentType,
+} from "./entity/incident.entity";
 import { AuthGuard } from "@nestjs/passport";
 import IncidentHistory from "./entity/incident-history.entity";
 import { ReportMetrics } from "./interface/incidents.interface";
+import { Roles } from "src/cloudinary/roles.decorator";
+import { Role } from "src/user/role.enum";
 
 @Controller("incident")
 export class IncidentController {
@@ -50,6 +57,7 @@ export class IncidentController {
 
     // 🛠️ Admin marca como asistido o eliminado y agrega info
     @Patch("admin/:id")
+    @Roles(Role.ADMIN)
     @UseGuards(AuthGuard("jwt"))
     updateIncidentByAdmin(
         @Param("id") id: string,
@@ -57,6 +65,16 @@ export class IncidentController {
     ): Promise<Incident> {
         return this.incidentService.updateByAdmin(id, dto);
     }
+
+    @Patch(":id/status")
+    @Roles(Role.ADMIN)
+    async updateStatus(
+        @Param("id", new ParseUUIDPipe()) id: string,
+        @Body("status") status: IncidentStatus,
+    ): Promise<Incident> {
+        return this.incidentService.updateStatus(id, status, true);
+    }
+
 
     @Get("metrics/total")
     getTotal(): Promise<number> {

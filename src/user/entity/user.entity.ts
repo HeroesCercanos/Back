@@ -7,6 +7,7 @@ import {
 } from "typeorm";
 import { Role } from "../role.enum";
 import { Incident } from "src/incidents/entity/incident.entity";
+import { Ban } from "../../bans/entity/ban.entity";
 
 @Entity()
 export class User {
@@ -64,9 +65,6 @@ export class User {
     @Column({ type: "boolean", default: true })
     isActive: boolean;
 
-    @Column({ default: 0 })
-    banCount: number;
-
-    @Column({ type: "timestamptz", nullable: true })
-    bannedUntil: Date | null;
+    @OneToMany(() => Ban, (ban) => ban.user)
+    bans: Ban[];
 }
