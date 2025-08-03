@@ -19,6 +19,10 @@ import { DonationModule } from "./donations/donations.module";
 import { CampaignModule } from "./campaigns/campaigns.module";
 import { WebhookController } from "./webhook/webhook.controller";
 
+import { ScheduleModule } from "@nestjs/schedule";
+import { EmailCampaignModule } from "./email-campaign/email-campaign.module";
+
+
 @Module({
     imports: [
         ConfigModule.forRoot({
@@ -57,7 +61,9 @@ import { WebhookController } from "./webhook/webhook.controller";
 
         CampaignModule,
 
-        
+        ScheduleModule.forRoot(),
+
+        EmailCampaignModule,
     ],
     controllers: [AppController, CloudinaryController, WebhookController],
     providers: [AppService, MatchConstraint, CloudinaryService, MailService],
