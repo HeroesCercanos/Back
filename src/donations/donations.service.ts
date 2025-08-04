@@ -1,7 +1,7 @@
 // src/donation/donation.service.ts
 import { BadRequestException, Injectable, Logger } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Repository, SelectQueryBuilder } from "typeorm";
+import { DeleteResult, Repository, SelectQueryBuilder } from "typeorm";
 import { Donation } from "./entity/donation.entity";
 import { CreateDonationDto } from "./dto/create-donatio.dto.";
 import { User } from "../user/entity/user.entity";
@@ -293,6 +293,21 @@ export class DonationService {
         // En caso de undefined (sin filas), asumimos '0'
         const totalString = result?.total ?? "0";
         return parseFloat(totalString);
+    }
+
+    /**
+     * Borra todas las donaciones cuyo status NO sea 'completed' (p.ej. pre-MercadoPago).
+     * @returns DeleteResult con contador de filas eliminadas.
+     */
+    async removeNonMercadoPagoDonations(): Promise<DeleteResult> {
+        return this.donationRepo
+            .createQueryBuilder()
+            .delete()
+            .from(Donation)
+            .where("status IS NULL OR status != :completed", {
+                completed: "completed",
+            })
+            .execute();
     }
 }
 

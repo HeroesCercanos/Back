@@ -10,6 +10,7 @@ import {
     Req,
     Param,
     ParseUUIDPipe,
+    Delete,
 } from "@nestjs/common";
 import { AuthGuard } from "@nestjs/passport";
 import { DonationService } from "./donations.service";
@@ -114,6 +115,21 @@ export class DonationController {
         const totalDonated =
             await this.donationService.getTotalDonationsByUser(userId);
         return { userId, totalDonated };
+    }
+
+    /**
+     * DELETE /donations/cleanup/pre-mercadopago
+     * Borra todas las donaciones antiguas que no fueron completadas por MercadoPago.
+     */
+    @Delete("cleanup/pre-mercadopago")
+    @Roles(Role.ADMIN)
+    async cleanupOldDonations() {
+        const result =
+            await this.donationService.removeNonMercadoPagoDonations();
+        return {
+            deletedCount: result.affected ?? 0,
+            message: `${result.affected ?? 0} donaciones pre-MercadoPago eliminadas.`,
+        };
     }
 }
 
