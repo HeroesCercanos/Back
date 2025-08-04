@@ -122,9 +122,12 @@ export class IncidentService {
     }
 
     async countByUser(userId: string): Promise<number> {
-        return this.incidentRepo.count({
-            where: { user: { id: userId } },
-        });
+        const result = await this.incidentRepo
+            .createQueryBuilder("i")
+            .select("COUNT(i.id)", "totalReports")
+            .where("i.userId = :userId", { userId })
+            .getRawOne<{ totalReports: string }>();
+        return parseInt(result?.totalReports ?? "0", 10);
     }
 
     /**
