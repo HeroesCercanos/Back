@@ -7,10 +7,16 @@ import {
     Patch,
     Delete,
     ParseIntPipe,
+    UseGuards,
 } from "@nestjs/common";
 import { EmailCampaignService } from "./email-campaign.service";
 import { CreateCampaignDto } from "./dto/create-campaign.dto";
-
+import { Roles } from "src/auth/decorator/roles.decorator";
+import { JwtAuthGuard } from "src/cloudinary/jwt-auth.guard";
+import { RolesGuard } from "src/auth/guards/google-auth/roles.guard";
+import { Role } from "src/user/role.enum";
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.ADMIN)
 @Controller("api/campaigns")
 export class EmailCampaignController {
     constructor(private readonly emailService: EmailCampaignService) {}

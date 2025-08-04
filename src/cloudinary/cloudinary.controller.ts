@@ -23,6 +23,7 @@ import { JwtAuthGuard } from "./jwt-auth.guard";
 import { RolesGuard } from "./roles.guard";
 import { Roles } from "./roles.decorator";
 import { UpdateMediaDto } from "./dto/update-media.dto";
+import { Role } from "src/user/role.enum";
 
 @Controller("cloudinary")
 export class CloudinaryController {
@@ -30,7 +31,7 @@ export class CloudinaryController {
 
     @Post("upload")
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles("admin")
+    @Roles(Role.ADMIN)
     @UseInterceptors(FileInterceptor("file", multerConfig))
     async upload(
         @UploadedFile() file: Express.Multer.File,
@@ -60,9 +61,12 @@ export class CloudinaryController {
     }
 
     @Get("trainings")
+    @Roles(Role.ADMIN)
+    @UseGuards(JwtAuthGuard, RolesGuard)
     async getAllTrainings() {
         try {
-            const media = await this.cloudinary.listMediaFromFolder("trainings");
+            const media =
+                await this.cloudinary.listMediaFromFolder("trainings");
 
             return media
                 .filter((file) =>
@@ -112,7 +116,7 @@ export class CloudinaryController {
 
     @Delete("trainings/:publicId")
     @UseGuards(JwtAuthGuard, RolesGuard)
-    @Roles("admin")
+    @Roles(Role.ADMIN)
     async deleteTraining(@Param("publicId") publicId: string) {
         const fullId = `trainings/${publicId}`;
 
