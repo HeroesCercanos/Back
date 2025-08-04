@@ -40,7 +40,7 @@ export class DonationController {
 
     @Get("user/:id/history")
     @UseGuards(AuthGuard("jwt"), RolesGuard)
-    @Roles(Role.ADMIN)
+    //@Roles(Role.ADMIN)
     getUserDonations(@Param("id") userId: string) {
         return this.donationService.findByUser({ id: userId } as User);
     }
