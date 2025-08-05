@@ -61,8 +61,6 @@ export class CloudinaryController {
     }
 
     @Get("trainings")
-    @Roles(Role.ADMIN)
-    @UseGuards(JwtAuthGuard, RolesGuard)
     async getAllTrainings() {
         try {
             const media =
