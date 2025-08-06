@@ -48,13 +48,13 @@ export class UserService {
     }
 
     async update(id: string, attrs: Partial<User>): Promise<User> {
-        await this.userRepository.update(id, attrs);
-        const user = await this.userRepository.findOne({ where: { id } });
-        if (!user) {
-            throw new Error(`User with id ${id} not found`);
-        }
-        return user;
+    const user = await this.userRepository.findOne({ where: { id } });
+    if (!user) {
+        throw new Error(`User with id ${id} not found`);
     }
+    const updated = Object.assign(user, attrs);
+    return await this.userRepository.save(updated);
+}
     async updateLocation(
         id: string,
         latitude: number,

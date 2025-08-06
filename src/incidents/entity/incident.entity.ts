@@ -64,6 +64,9 @@ export class Incident {
 
     @OneToMany(() => IncidentHistory, (history) => history.incident)
     history: IncidentHistory[];
+
+    @Column({ type: "boolean", default: false })
+    isEdited: boolean;
 }
 
 export default Incident;
