@@ -48,13 +48,13 @@ export class UserService {
     }
 
     async update(id: string, attrs: Partial<User>): Promise<User> {
-    const user = await this.userRepository.findOne({ where: { id } });
-    if (!user) {
-        throw new Error(`User with id ${id} not found`);
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new Error(`User with id ${id} not found`);
+        }
+        const updated = Object.assign(user, attrs);
+        return await this.userRepository.save(updated);
     }
-    const updated = Object.assign(user, attrs);
-    return await this.userRepository.save(updated);
-}
     async updateLocation(
         id: string,
         latitude: number,
@@ -234,7 +234,7 @@ export class UserService {
         user.password = hash;
         await this.userRepository.save(user);
     }
-   
+
     async findCompletedByUser(user: User): Promise<Donation[]> {
         return this.donationRepository.find({
             where: { user: { id: user.id }, status: "completed" },
@@ -245,37 +245,28 @@ export class UserService {
     async setActiveStatus(
         userId: string,
         isActive: boolean,
-        reason?: string, // opcional motivo en ban manual
+        reason?: string,
     ): Promise<User> {
-        const user = await this.userRepository.findOneBy({ id: userId });
+        // 1) Me aseguro de que exista el usuario
+        const user = await this.userRepository.findOne({
+            where: { id: userId },
+            relations: ["bans"],
+        });
         if (!user) throw new NotFoundException("Usuario no encontrado");
 
         if (!isActive) {
-            // 1) Disparo el ban progresivo y mail (BanService internamente actualiza banCount e isActive)
-            await this.banService.banUser(userId, /* manual */ true, reason);
-            // 2) Cargo de nuevo el user para devolver el estado más reciente
-            return this.findById(userId);
+            // 2) Desactivar ⇒ delego a banService (incrementa banCount, marca isActive=false, manda mail)
+            await this.banService.banUser(userId, true, reason);
+        } else {
+            // 3) Reactivar ⇒ delego a banService (marca reactivatedAt, pone isActive=true, manda mail)
+            await this.banService.reactivateUser(userId, true);
         }
 
-        // ————— Reactivación —————
-        user.isActive = true;
-        const updated = await this.userRepository.save(user);
-
-        // envío mail de reactivación si ya tenía bans
-        const bans = await this.banService.getBans(userId);
-        const lastBan = bans.sort(
-            (a, b) => b.expiresAt.getTime() - a.expiresAt.getTime(),
-        )[0];
-        if (lastBan) {
-            await this.mailService.sendReactivationEmail({
-                name: updated.name,
-                email: updated.email,
-                previousBannedUntil: lastBan.expiresAt,
-            });
-        }
-
-        return updated;
+        // 4) Devuelvo el usuario fresco
+        return this.findById(userId);
     }
+
+    /** Busca usuario por ID (sin exponer datos sensibles) */
 
     /** Cambia el rol de un usuario */
     async setUserRole(userId: string, newRole: Role): Promise<User> {

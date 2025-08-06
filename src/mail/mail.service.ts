@@ -300,7 +300,8 @@ export class MailService {
     }
 
     async sendReactivationEmail(dto: ReactivationEmailDto) {
-        const { name, email, previousBannedUntil } = dto;
+        const { name, email, effectiveExpirationDate } = dto;
+        const formatted = effectiveExpirationDate.toLocaleString();
 
         const info = await this.transporter.sendMail({
             from: `"Héroes Cercanos" <${this.config.get("MAIL_FROM")}>`,
@@ -310,8 +311,8 @@ export class MailService {
         <div style="font-family: Arial, sans-serif; color: #333; max-width:600px; margin:0 auto; padding:20px;">
           <h2 style="text-align:center; color:#2e7d32;">¡Bienvenido de vuelta, ${name}!</h2>
           <p>Tu cuenta ha sido <strong>reactivada</strong> correctamente.</p>
-          <p>La última suspensión expiró el <em>${previousBannedUntil.toLocaleString()}</em>.</p>
-          <p>Si tienes dudas o necesitas ayuda, no dudes en responder a este correo.</p>
+          <p><strong>Fecha de reactivación:</strong> <em>${formatted}</em>.</p>
+          <p>Si necesitas ayuda, responde a este correo.</p>
           <hr/>
           <footer style="font-size:12px; color:#666; text-align:center;">
             Este mensaje fue enviado automáticamente por <strong>Héroes Cercanos</strong>.<br/>
