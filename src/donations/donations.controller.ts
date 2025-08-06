@@ -20,7 +20,6 @@ import { User } from "src/user/entity/user.entity";
 import { CurrentUser } from "src/auth/decorator/current-user.decorator";
 import { Roles } from "src/auth/decorator/roles.decorator";
 import { Role } from "src/user/role.enum";
-import { RolesGuard } from "src/auth/guards/google-auth/roles.guard";
 
 @Controller("donations")
 export class DonationController {
@@ -40,7 +39,7 @@ export class DonationController {
     }
 
     @Get("user/:id/history")
-    @UseGuards(AuthGuard("jwt"), RolesGuard)
+    @UseGuards(AuthGuard("jwt"))
     //@Roles(Role.ADMIN)
     getUserDonations(@Param("id") userId: string) {
         return this.donationService.findByUser({ id: userId } as User);
@@ -48,8 +47,7 @@ export class DonationController {
 
     // 🔒 Historial mensual (admin)
     @Get("stats/history") // Mantengo el path original por si lo usas con este nombre
-    @UseGuards(AuthGuard("jwt"), RolesGuard)
-    @Roles(Role.ADMIN)
+    @UseGuards(AuthGuard("jwt"))
     getAllMonthlyDonations(): Promise<{ month: string; total: number }[]> {
         return this.donationService.getAllMonthlyDonations();
     }
@@ -70,16 +68,16 @@ export class DonationController {
     }
 
     @Get("stats/total")
-    @UseGuards(AuthGuard("jwt"), RolesGuard)
-    @Roles(Role.ADMIN)
+    @UseGuards(AuthGuard("jwt"))
     async getTotalDonations(): Promise<{ total: number }> {
+        this.logger.log("➤ GET /donations/stats/total invocado");
         const total = await this.donationService.totalDonations();
+        this.logger.log(`➤ Total computed: ${total}`);
         return { total };
     }
 
     @Get("stats/monthly")
-    @UseGuards(AuthGuard("jwt"), RolesGuard)
-    @Roles(Role.ADMIN)
+    @UseGuards(AuthGuard("jwt"))
     async getMonthlyDonationStats(
         @Query("period") period?: string, // Parámetro de consulta opcional para el número de meses
     ): Promise<{ month: string; total: number; count: number }[]> {
@@ -100,8 +98,7 @@ export class DonationController {
     }
 
     @Get("stats/weekly")
-    @UseGuards(AuthGuard("jwt"), RolesGuard)
-    @Roles(Role.ADMIN)
+    @UseGuards(AuthGuard("jwt"))
     async getWeeklyDonationStats(): Promise<
         { date: string; total: number; count: number }[]
     > {
