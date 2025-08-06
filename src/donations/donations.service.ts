@@ -288,15 +288,17 @@ export class DonationService {
     }
 
     async getTotalDonationsByUser(userId: string): Promise<number> {
-        const result = await this.donationRepo
+        const raw = await this.donationRepo
             .createQueryBuilder("donation")
             .select("COALESCE(SUM(donation.amount), 0)", "total")
             .where("donation.userId = :userId", { userId })
+            .andWhere("donation.status = :status", { status: "completed" })
             .getRawOne<{ total: string }>();
 
-        // En caso de undefined (sin filas), asumimos '0'
-        const totalString = result?.total ?? "0";
-        return parseFloat(totalString);
+        // raw puede ser undefined, así que usamos ?. y coalescencia:
+        const totalStr = raw?.total ?? "0";
+
+        return parseFloat(totalStr);
     }
 
     /**
