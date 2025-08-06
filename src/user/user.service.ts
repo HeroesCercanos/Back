@@ -234,7 +234,13 @@ export class UserService {
         user.password = hash;
         await this.userRepository.save(user);
     }
-
+   
+    async findCompletedByUser(user: User): Promise<Donation[]> {
+        return this.donationRepository.find({
+            where: { user: { id: user.id }, status: "completed" },
+            order: { createdAt: "DESC" },
+        });
+    }
     // src/users/users.service.ts
     async setActiveStatus(
         userId: string,

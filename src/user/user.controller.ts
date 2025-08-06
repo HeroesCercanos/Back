@@ -157,6 +157,11 @@ export class UserController {
         return { message: "Contraseña actualizada correctamente" };
     }
 
+    @Get(":id/donations")
+    async getDonations(@Param("id") id: string) {
+        return this.userService.findCompletedByUser({ id: id } as User);
+    }
+
     @Patch(":id/active")
     @Roles(Role.ADMIN)
     async setActiveStatus(
