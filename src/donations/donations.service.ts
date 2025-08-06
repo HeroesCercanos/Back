@@ -38,13 +38,14 @@ export class DonationService {
 
     /** Suma total de todas las donaciones */
     async totalDonations(): Promise<number> {
-        const result = await this.donationRepo
+        const raw = await this.donationRepo
             .createQueryBuilder("donation")
-            .select("SUM(donation.amount)", "sum")
-            .where("donation.status = :status", { status: "completed" }) // Solo suma donaciones completadas
+            .select("COALESCE(SUM(donation.amount), 0)", "sum")
+            .where("donation.status = :status", { status: "completed" })
             .getRawOne<{ sum: string }>();
 
-        const sumStr = result?.sum ?? "0";
+        // raw puede ser undefined, así que usamos ?. y un valor por defecto
+        const sumStr = raw?.sum ?? "0";
         return parseFloat(sumStr);
     }
 
@@ -260,8 +261,6 @@ export class DonationService {
     async markAsCompleted(id: string): Promise<void> {
         await this.donationRepo.update(id, { status: "completed" });
     }
-
-    
 
     async getUserDonationsSummary(
         user: User,
