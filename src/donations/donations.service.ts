@@ -38,14 +38,17 @@ export class DonationService {
 
     /** Suma total de todas las donaciones */
     async totalDonations(): Promise<number> {
+        // 1) Hacemos la suma solo de los "completed"
         const raw = await this.donationRepo
             .createQueryBuilder("donation")
             .select("COALESCE(SUM(donation.amount), 0)", "sum")
             .where("donation.status = :status", { status: "completed" })
             .getRawOne<{ sum: string }>();
 
-        // raw puede ser undefined, así que usamos ?. y un valor por defecto
+        // 2) Extraemos el resultado (o 0 si raw es undefined)
         const sumStr = raw?.sum ?? "0";
+
+        // 3) Parseamos a número y devolvemos
         return parseFloat(sumStr);
     }
 

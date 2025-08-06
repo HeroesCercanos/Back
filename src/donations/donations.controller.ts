@@ -39,8 +39,6 @@ export class DonationController {
         return this.donationService.getUserDonationsSummary(req.user);
     }
 
-    
-
     @Get("user/:id/history")
     @UseGuards(AuthGuard("jwt"), RolesGuard)
     //@Roles(Role.ADMIN)
