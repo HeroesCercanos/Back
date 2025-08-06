@@ -85,6 +85,8 @@ export class AuthController {
         return { message: "Tu contraseña ha sido actualizada correctamente." };
     }
 
+
+
     //cookies
     @Post("signin")
     @HttpCode(200)
@@ -132,6 +134,8 @@ export class AuthController {
             },
         };
     }
+
+    
 
     @Post("logout")
     @HttpCode(200)

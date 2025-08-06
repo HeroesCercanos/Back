@@ -1,14 +1,17 @@
-// src/user/dto/change-password.dto.ts
+// src/auth/dto/change-password.dto.ts
+
 import { IsString, MinLength } from 'class-validator';
 
 export class ChangePasswordDto {
-  @IsString()
-  @MinLength(8)
+  @IsString({ message: 'La nueva contraseña debe ser un texto' })
+  @MinLength(6, {
+    message: 'La nueva contraseña debe tener al menos $constraint1 caracteres',
+  })
   newPassword: string;
 
-  // Si quieres validar confirmPassword aquí, podrías usar un decorador @Match('newPassword')
-  // o simplemente omitirlo y confiar en que el front ya lo validó.
-  @IsString()
-  @MinLength(8)
+  @IsString({ message: 'La confirmación de contraseña debe ser un texto' })
+  @MinLength(6, {
+    message: 'La confirmación de contraseña debe tener al menos $constraint1 caracteres',
+  })
   confirmPassword: string;
 }

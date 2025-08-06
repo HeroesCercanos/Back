@@ -77,17 +77,7 @@ export class UserController {
         return this.userService.remove(id);
     }
 
-    @Patch(":id")
-    updateUser(
-        @Param("id") id: string,
-        @Body() updateUserDto: UpdateUserDto,
-    ): Promise<User> {
-        return this.userService.update(id, updateUserDto);
-    }
-
     @Get("stats/total")
-    @UseGuards(AuthGuard("jwt"), RolesGuard)
-    @Roles(Role.ADMIN)
     async getTotalUsersCount(): Promise<{ total: number }> {
         const total = await this.userService.getTotalUsers();
         return { total };
@@ -146,15 +136,25 @@ export class UserController {
         }
         return this.userService.getUserRegistrationsLastNMonths(nMonths);
     }
-    @Patch("password")
-    async updatePassword(@Req() req: any, @Body() dto: ChangePasswordDto) {
-        // (opcional) validar dto.newPassword === dto.confirmPassword
-        if (dto.newPassword !== dto.confirmPassword) {
+    @Patch("change-password")
+    @UseGuards(AuthGuard("jwt"))
+    async updatePassword(
+        @Req() req: any,
+        @Body() dto: ChangePasswordDto,
+    ): Promise<{ message: string }> {
+        console.log("🔑 JWT payload en req.user =", req.user);
+        const { newPassword, confirmPassword } = dto;
+
+        if (newPassword !== confirmPassword) {
             throw new BadRequestException("Las contraseñas no coinciden");
         }
 
-        await this.userService.changePassword(req.user.id, dto.newPassword);
-        return { message: "Contraseña actualizada" };
+        // ← Aquí: tomamos el id que sí existe en el objeto User
+        const userId = (req.user as any).id as string;
+        console.log("🔑 Cambiando contraseña para userId =", userId);
+
+        await this.userService.changePassword(userId, newPassword);
+        return { message: "Contraseña actualizada correctamente" };
     }
 
     @Patch(":id/active")
@@ -189,5 +189,13 @@ export class UserController {
         await this.banService.banUser(id, true, reason);
         // luego devolvemos el usuario actualizado
         return this.userService.findById(id);
+    }
+
+    @Patch(":id")
+    updateUser(
+        @Param("id") id: string,
+        @Body() updateUserDto: UpdateUserDto,
+    ): Promise<User> {
+        return this.userService.update(id, updateUserDto);
     }
 }

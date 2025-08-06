@@ -212,4 +212,6 @@ export class AuthService {
 
         await this.usersService.updatePassword(user.id, newPassword);
     }
+
+    
 }
