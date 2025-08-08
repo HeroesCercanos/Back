@@ -130,6 +130,8 @@ export class AuthController {
                 email: req.user.email,
                 name: req.user.name,
                 role: req.user.role,
+                phone: req.user.phone,
+                address: req.user.address,
                 // si tienes donations u otros campos:
             },
         };
